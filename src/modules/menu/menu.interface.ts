@@ -24,3 +24,4 @@ export interface IMenu {
     userId: Types.ObjectId;
   }[];
 }
+
