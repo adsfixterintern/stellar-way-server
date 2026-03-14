@@ -4,7 +4,13 @@ import sendResponse from "../../app/utils/sendResponse";
 import { ChefServices } from "./chef.service";
 
 const createChef = catchAsync(async (req: Request, res: Response) => {
+
+  if (req.file) {
+    req.body.image = req.file.path; 
+  }
+
   const result = await ChefServices.createChefIntoDB(req.body);
+  
   sendResponse(res, {
     statusCode: 201,
     success: true,

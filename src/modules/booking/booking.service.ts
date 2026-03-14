@@ -17,19 +17,19 @@ const createBookingIntoDB = async (payload: IBooking) => {
   return result;
 };
 
-// ২. সব বুকিং দেখা (এখন পপুলেশন লাগবে না, ডাটা অলরেডি বুকিং কালেকশনেই আছে)
+
 const getAllBookingsFromDB = async () => {
   const result = await Booking.find();
   return result;
 };
 
-// ৩. একটি নির্দিষ্ট বুকিং দেখা
+
 const getSingleBookingFromDB = async (id: string) => {
   const result = await Booking.findById(id);
   return result;
 };
 
-// ৪. আপডেট করা
+
 const updateBookingInDB = async (id: string, payload: Partial<IBooking>) => {
   const result = await Booking.findByIdAndUpdate(id, payload, {
     new: true,
@@ -38,7 +38,7 @@ const updateBookingInDB = async (id: string, payload: Partial<IBooking>) => {
   return result;
 };
 
-// ৫. ডিলিট করা
+
 const deleteBookingFromDB = async (id: string) => {
   const result = await Booking.findByIdAndDelete(id);
   return result;
