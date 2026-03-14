@@ -5,6 +5,10 @@ import { IMenu } from './menu.interface';
 const menuSchema = new Schema<IMenu>({
   title: { type: String, required: true },
   price: { type: Number, required: true },
+  image: {
+    url: { type: String, required: true },
+    publicId: { type: String, required: true }
+  },
   stock: { type: Number, default: 0 },
   chefId: { type: Schema.Types.ObjectId, ref: 'Chef' },
   categoryId: { type: Schema.Types.ObjectId, ref: 'Category' },

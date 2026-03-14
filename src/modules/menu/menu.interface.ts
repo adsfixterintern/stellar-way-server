@@ -6,7 +6,10 @@ export interface IMenu {
   subTitle?: string;
   description: string;
   price: number;
-  image: string;
+  image: {
+    url: string;
+    publicId: string;
+  };
   chefId: Types.ObjectId;
   categoryId: Types.ObjectId;
   stock: number; 

@@ -1,3 +1,4 @@
+import { UploadService } from '../upload/upload.service';
 import { IMenu } from './menu.interface';
 import { Menu } from './menu.model';
 
@@ -72,6 +73,10 @@ const deleteMenuFromDB = async (id: string) => {
   const result = await Menu.findByIdAndDelete(id);
   if (!result) {
     throw new Error('Menu item not found to delete!');
+  }
+
+  if (result.image?.publicId) {
+    await UploadService.deleteImageFromCloudinary(result.image.publicId);
   }
   return result;
 };

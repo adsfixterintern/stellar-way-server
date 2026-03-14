@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ChefRoutes = void 0;
+const express_1 = require("express");
+const chef_controller_1 = require("./chef.controller");
+const router = (0, express_1.Router)();
+router.post('/create-chef', chef_controller_1.ChefControllers.createChef);
+router.get('/', chef_controller_1.ChefControllers.getAllChefs);
+router.get('/:id', chef_controller_1.ChefControllers.getSingleChef);
+router.patch('/:id', chef_controller_1.ChefControllers.updateChef);
+router.delete('/:id', chef_controller_1.ChefControllers.deleteChef);
+exports.ChefRoutes = router;

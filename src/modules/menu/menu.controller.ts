@@ -2,8 +2,16 @@ import { Request, Response } from 'express';
 import catchAsync from '../../app/utils/catchAsync';
 import sendResponse from '../../app/utils/sendResponse';
 import { MenuService } from './menu.service';
+import { UploadService } from '../upload/upload.service';
 
 const createMenu = catchAsync(async (req: Request, res: Response) => {
+
+  if (req.file) {
+    const uploadResult = UploadService.processSingleFile(req.file as Express.Multer.File);
+    if (uploadResult) {
+      req.body.image = uploadResult; 
+    }
+  }
   const result = await MenuService.createMenuIntoDB(req.body);
 
   sendResponse(res, {
@@ -41,6 +49,11 @@ const getSingleMenu = catchAsync(async (req: Request, res: Response) => {
 
 const updateMenu = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
+  if (req.file) {
+    const uploadResult = UploadService.processSingleFile(req.file as Express.Multer.File);
+    if (uploadResult) req.body.image = uploadResult;
+  }
+  
   const result = await MenuService.updateMenuInDB(id as string, req.body);
 
   sendResponse(res, {
