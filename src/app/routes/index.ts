@@ -10,6 +10,8 @@ import { CategoryRoutes } from "../../modules/category/category.route";
 import { uploadRoutes } from "../../modules/upload/upload.route";
 import {GalleryRoutes} from '../../modules/gallery/gallery.route'
 import { RiderRoutes } from '../../modules/rider/rider.route';
+import { ChatRoutes } from '../../modules/chat/chat.route';
+import { TrackingRoutes } from '../../modules/tracking/tracking.route';
 const router = Router();
 
 const moduleRoutes = [
@@ -23,6 +25,8 @@ const moduleRoutes = [
   { path: "/uploads", route: uploadRoutes },
   { path: "/gallery", route: GalleryRoutes },
   { path: '/riders', route: RiderRoutes },
+  { path: "/chats", route: ChatRoutes },       
+  { path: "/tracking", route: TrackingRoutes }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
