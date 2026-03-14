@@ -1,12 +1,11 @@
 import { Schema, model } from 'mongoose';
-import { IMessage } from './chat.interface';
+import { IChat } from './chat.interface';
 
-const chatSchema = new Schema<IMessage>({
-  orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
+const messageSchema = new Schema({
   sender: { 
     type: Schema.Types.ObjectId, 
     required: true, 
-    refPath: 'senderModel' 
+    refPath: 'messages.senderModel' 
   },
   senderModel: { 
     type: String, 
@@ -14,7 +13,18 @@ const chatSchema = new Schema<IMessage>({
     enum: ['User', 'Rider'] 
   },
   message: { type: String, required: true },
-  isRead: { type: Boolean, default: false }
+  isRead: { type: Boolean, default: false },
+  time: { type: Date, default: Date.now }
+});
+
+const chatSchema = new Schema<IChat>({
+  orderId: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'Order', 
+    required: true, 
+    unique: true 
+  },
+  messages: [messageSchema]
 }, { timestamps: true });
 
-export const Chat = model<IMessage>('Chat', chatSchema);
+export const Chat = model<IChat>('Chat', chatSchema);
