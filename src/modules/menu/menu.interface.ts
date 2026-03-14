@@ -1,9 +1,5 @@
 import { Types } from 'mongoose';
 
-export interface ICategory {
-  name: string;
-  sortOrder: number;
-}
 
 export interface IMenu {
   title: string;
