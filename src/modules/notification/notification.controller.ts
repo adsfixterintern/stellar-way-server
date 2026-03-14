@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Notification } from './notification.model';
 import { User } from '../user/user.model';
+import { io } from '../../app/utils/socket';
 
 export const getUserNotificationsByEmail = async (req: Request, res: Response) => {
   try {
@@ -35,19 +36,17 @@ export const getUserNotificationsByEmail = async (req: Request, res: Response) =
     res.status(500).json({ success: false, message: 'Fetch error', error });
   }
 };
+
+
+
 export const createNotification = async (req: Request, res: Response) => {
   try {
     const { title, message, type, email } = req.body;
-
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'doesnot exist email' 
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-
 
     const result = await Notification.create({ 
       title, 
@@ -56,15 +55,24 @@ export const createNotification = async (req: Request, res: Response) => {
       userId: user._id
     });
 
+    if (io) {
+      io.to(user._id.toString()).emit('new-notification', {
+        _id: result._id,
+        title: result.title,
+        message: result.message,
+        type: result.type,
+        createdAt: result.createdAt
+      });
+    }
+
     res.status(201).json({ success: true, data: result });
   } catch (error: any) {
-    res.status(400).json({ 
-      success: false, 
-      message: 'Create error', 
-      error: error.message 
-    });
+    res.status(400).json({ success: false, message: 'Create error', error: error.message });
   }
 };
+
+
+
 export const markAsRead = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -78,6 +86,8 @@ export const markAsRead = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: 'Update error', error });
   }
 };
+
+
 export const deleteNotification = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

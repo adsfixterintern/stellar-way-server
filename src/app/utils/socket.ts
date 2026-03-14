@@ -1,8 +1,10 @@
 import { Server as SocketServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { ChatService } from '../../modules/chat/chat.service';
-import { TrackingService } from '../../modules/tracking/tracking.service'; // ট্র্যাকিং সার্ভিস ইম্পোর্ট করুন
+import { TrackingService } from '../../modules/tracking/tracking.service';
 
+
+export let io: SocketServer;
 export const setupSocket = (server: HttpServer) => {
   const io = new SocketServer(server, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
@@ -12,6 +14,11 @@ export const setupSocket = (server: HttpServer) => {
     socket.on('join-order', (orderId: string) => {
       socket.join(orderId);
       console.log(`User joined order room: ${orderId}`);
+    });
+
+    socket.on('join-notification', (userId: string) => {
+      socket.join(userId);
+      console.log(`User joined notification room: ${userId}`);
     });
 
     socket.on('send-message', async (data) => {
