@@ -4,6 +4,8 @@ import config from './app/config';
 import connectDB from './app/config/db';
 import globalRoutes from './app/routes/index';
 import globalErrorHandler from './app/middlewares/globalErrorhandler';
+import { createServer } from 'http';
+import { setupSocket } from './app/utils/socket';
 
 const app = express();
 const PORT = config.port;
@@ -13,6 +15,9 @@ app.use(cors());
 app.use(express.json());
 
 connectDB();
+const server = createServer(app);
+
+setupSocket(server);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('stellar way Server is Live!');
