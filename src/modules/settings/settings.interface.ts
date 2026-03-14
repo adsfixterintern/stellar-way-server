@@ -8,6 +8,4 @@ export interface ISettings {
   tax: number;
   googleMapLink: string;
   maintenanceMode: boolean;
-  language: 'English' | 'Bangla';
-  currencySymbol: string;
 }
