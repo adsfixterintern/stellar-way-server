@@ -18,6 +18,7 @@ import { FeedbackRoutes } from '../../modules/feedback/feedback.route';
 import { EventRoutes } from "../../modules/event/event.route";
 import { Router } from 'express';
 import { MenuRoutes } from '../../modules/menu/menu.route';
+import { EventBookingRoutes } from "../../modules/event-booking/eventBooking.route";
 const router = Router();
 
 const moduleRoutes = [
@@ -36,6 +37,10 @@ const moduleRoutes = [
   {
     path: "/events",
     route: EventRoutes
+  },
+  {
+    path: "/event-bookings",
+    route: EventBookingRoutes
   },
   { path: '/bookings', route: BookingRoutes },
   { path: '/chefs', route: ChefRoutes },

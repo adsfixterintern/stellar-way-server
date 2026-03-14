@@ -17,8 +17,12 @@ const eventBookingSchema = new Schema<IEventBooking>({
     required: true,
     default: 1 
   },
+  transactionId: {
+     type: String, 
+     required: true 
+    },
   totalAmount: { 
-    type: Number, 
+    type: Number,
     required: true 
   },
   paymentStatus: { 
