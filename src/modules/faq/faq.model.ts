@@ -7,7 +7,7 @@ const faqSchema = new Schema<IFaq>(
     answer: { type: String, required: true },
   },
   {
-    timestamps: true, 
+    timestamps: true, // এটি অটো createdAt এবং updatedAt তৈরি করবে
   }
 );
 
