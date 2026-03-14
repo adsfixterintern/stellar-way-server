@@ -9,5 +9,5 @@ router.get('/:email', OrderControllers.getMyOrders);
 router.get('/details/:id', OrderControllers.getOrderDetails);
 router.patch('/status/:id', OrderControllers.updatePaymentStatus);
 router.patch('/delivery/:id', OrderControllers.updateDeliveryStatus);
-
+router.post('/create-stripe-order', OrderControllers.createStripeOrder);
 export const OrderRoutes = router;

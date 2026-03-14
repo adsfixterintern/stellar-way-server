@@ -3,7 +3,8 @@ import catchAsync from '../../app/utils/catchAsync';
 import sendResponse from '../../app/utils/sendResponse';
 import { Order } from './order.model';
 import SSLCommerzPayment from 'sslcommerz-lts';
-
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 // ১. ড্যাশবোর্ডের জন্য সব অর্ডার
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
@@ -102,7 +103,54 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
   });
 });
+const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
+  const orderData = req.body;
+  const transactionId = `STXP-${Date.now()}`; // Stripe এর জন্য আলাদা প্রিফিক্স
 
+  // ১. ডাটাবেজে অর্ডার সেভ করা
+  const finalOrderData = {
+    ...orderData,
+    transactionId,
+    paymentStatus: 'unpaid',
+    paymentMethod: 'Stripe',
+  };
+  
+  const result = await Order.create(finalOrderData);
+
+  // ২. Stripe Checkout Session তৈরি করা
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: orderData.items.map((item: any) => ({
+      price_data: {
+        currency: 'usd', 
+        product_data: {
+          name: 'Savory Nest Food Order',
+        },
+        unit_amount: Math.round(orderData.totalPrice * 100), // সেন্টে কনভার্ট
+      },
+      quantity: 1,
+    })),
+    mode: 'payment',
+    // আপনার ফ্রন্টএন্ডের URL অনুযায়ী নিচের লিঙ্কগুলো সেট করুন
+    success_url: `http://localhost:3000/payment/success/${transactionId}`,
+    cancel_url: `http://localhost:3000/payment/cancel`,
+    metadata: {
+      orderId: result._id.toString(),
+      transactionId: transactionId,
+    },
+    customer_email: orderData.customerInfo.email,
+  });
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: 'Stripe order initiated successfully!',
+    data: { 
+      order: result, 
+      paymentUrl: session.url // এই URL-এ ইউজারকে পাঠাতে হবে
+    },
+  });
+});
 // ৪. ডেলিভারি স্ট্যাটাস আপডেট
 const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -155,7 +203,8 @@ const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const OrderControllers = {
-  createOrder,
+    createOrder,
+    createStripeOrder,
   getAllOrders,
   getMyOrders,
   updateDeliveryStatus,
