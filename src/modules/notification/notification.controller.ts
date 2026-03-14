@@ -37,11 +37,32 @@ export const getUserNotificationsByEmail = async (req: Request, res: Response) =
 };
 export const createNotification = async (req: Request, res: Response) => {
   try {
-    const { title, message, type, userId } = req.body;
-    const result = await Notification.create({ title, message, type, userId });
+    const { title, message, type, email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'doesnot exist email' 
+      });
+    }
+
+
+    const result = await Notification.create({ 
+      title, 
+      message, 
+      type, 
+      userId: user._id
+    });
+
     res.status(201).json({ success: true, data: result });
-  } catch (error) {
-    res.status(400).json({ success: false, message: 'Create error', error });
+  } catch (error: any) {
+    res.status(400).json({ 
+      success: false, 
+      message: 'Create error', 
+      error: error.message 
+    });
   }
 };
 export const markAsRead = async (req: Request, res: Response) => {
