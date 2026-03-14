@@ -6,7 +6,6 @@ const settingsSchema = new Schema<ISettings>({
   maintenanceMode: { type: Boolean, default: false },
   deliveryCharge: { type: Number, default: 0 },
   tax: { type: Number, default: 0 },
-  language: { type: String, enum: ['English', 'Bangla'], default: 'English' }
 });
 
 export const Settings = model<ISettings>('Settings', settingsSchema);
