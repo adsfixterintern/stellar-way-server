@@ -14,14 +14,17 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllBookings = catchAsync(async (req: Request, res: Response) => {
-  const result = await BookingServices.getAllBookingsFromDB();
 
+const getAllBookings = catchAsync(async (req: Request, res: Response) => {
+  // console.log("Query Params:", req.query); 
+  const result = await BookingServices.getAllBookingsFromDB(req.query);
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'All bookings retrieved successfully',
-    data: result,
+    message: 'Bookings retrieved successfully',
+    data: result.data,
+    meta: result.meta, 
   });
 });
 
