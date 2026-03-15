@@ -20,10 +20,7 @@ const createChef = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getAllChefs = (0, catchAsync_1.default)(async (req, res) => {
-    console.log("Chef Controller reached!"); // এই লগটি টার্মিনালে আসছে কি?
     const result = await chef_service_1.ChefServices.getAllChefsFromDB(req.query);
-    // এটি দেখুন
-    console.log("Final result to send:", result);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,

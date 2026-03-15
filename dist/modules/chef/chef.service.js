@@ -10,19 +10,17 @@ const getAllChefsFromDB = async (query) => {
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const result = await chef_model_1.Chef.find()
+        .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 });
+        .limit(limit);
     const total = await chef_model_1.Chef.countDocuments();
-    const meta = {
-        page: page,
-        limit: limit,
-        total: total,
-        totalPage: Math.ceil(total / limit),
-    };
-    console.log("META BEING SENT:", meta);
     return {
-        meta,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage: Math.ceil(total / limit),
+        },
         data: result,
     };
 };
