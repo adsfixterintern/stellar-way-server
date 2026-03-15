@@ -5,14 +5,29 @@ import crypto from "crypto";
 import { sendEmail } from "../../app/utils/sendEmail";
 
 const registerUserIntoDB = async (payload: IUser) => {
-  // password hash kora
+  // 1. Check if user already exists
+  const isUserExists = await User.findOne({ email: payload.email });
+  if (isUserExists) {
+    throw new Error("User already exists with this email!");
+  }
+
+  // 2. Hash password
   if (payload.password) {
     const salt = await bcrypt.genSalt(10);
     payload.password = await bcrypt.hash(payload.password, salt);
   }
 
-  const result = await User.create(payload);
-  return result;
+  // 3. Create user
+  try {
+    const result = await User.create(payload);
+    return result;
+  } catch (error: any) {
+    // Handling Mongoose unique constraint error (e.g. if two requests hit at the same time)
+    if (error.code === 11000) {
+      throw new Error("This email is already in use!");
+    }
+    throw error;
+  }
 };
 
 const loginUserFromDB = async (payload: Pick<IUser, "email" | "password">) => {
@@ -151,10 +166,33 @@ const changePasswordIntoDB = async (userId: string, payload: any) => {
   return null;
 };
 
+const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
+
+  if (!payload) {
+    throw new Error("Payload is missing!");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+
+  const { email, password, role, ...updateData } = payload;
+
+  const result = await User.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  return result;
+};
+
 export const UserService = {
   registerUserIntoDB,
   loginUserFromDB,
   forgetPasswordIntoDB,
   resetPasswordIntoDB,
   changePasswordIntoDB,
+  updateProfileInDB
 };

@@ -16,6 +16,12 @@ router.get(
   UserController.getAdminData, 
 );
 
+router.patch(
+  "/update-profile",
+  isAuthenticated, 
+  UserController.updateProfile
+);
+
 
 router.post('/forget-password', UserController.forgetPassword);
 router.patch('/reset-password/:token', UserController.resetPassword);
