@@ -1,13 +1,18 @@
+
+
 export interface ISettings {
   siteName: string;
   logo: string;
   location: string;
   phone: string;
   email: string;
-  deliveryCharge: number;
+  // Updated to Nested Object
+  deliveryCharge: {
+    insideDhaka: number;
+    outsideDhaka: number;
+  };
   tax: number;
-  googleMapLink: string;
   maintenanceMode: boolean;
-  language: 'English' | 'Bangla';
-  currencySymbol: string;
+
+
 }

@@ -5,6 +5,7 @@ export interface IEventBooking {
   eventId: Types.ObjectId;
   numberOfSeats: number;
   totalAmount: number;
+  transactionId: string;
   paymentStatus: 'pending' | 'paid' | 'cancelled';
   bookingDate: Date;
 }

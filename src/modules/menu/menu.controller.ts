@@ -7,11 +7,16 @@ import { UploadService } from '../upload/upload.service';
 const createMenu = catchAsync(async (req: Request, res: Response) => {
 
   if (req.file) {
-    const uploadResult = UploadService.processSingleFile(req.file as Express.Multer.File);
+    const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
+
     if (uploadResult) {
-      req.body.image = uploadResult; 
+      req.body.image = {
+        url: uploadResult.url,
+        publicId: uploadResult.public_id as string
+      };
     }
   }
+
   const result = await MenuService.createMenuIntoDB(req.body);
 
   sendResponse(res, {
@@ -21,6 +26,7 @@ const createMenu = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 
 const getAllMenus = catchAsync(async (req: Request, res: Response) => {
   

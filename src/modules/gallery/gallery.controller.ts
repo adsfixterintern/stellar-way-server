@@ -39,7 +39,6 @@ const getAllGalleryItems = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ৩. গ্যালারি আইটেম ডিলিট করা
 const deleteGalleryItem = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -47,10 +46,19 @@ const deleteGalleryItem = catchAsync(async (req: Request, res: Response) => {
   if (!item) {
     throw new Error('Item not found!');
   }
-  const publicId = item.image.split('/').pop()?.split('.')[0] || ''; 
-  
+
+  const urlParts = item.image.split('/');
+  const fileNameWithExtension = urlParts[urlParts.length - 1] as string; // যেমন: image.jpg
+  const fileName = fileNameWithExtension.split('.')[0]; // যেমন: image
+
+  const publicId = fileName; 
+
   if (publicId) {
-    await UploadService.deleteImageFromCloudinary(publicId);
+    try {
+      await UploadService.deleteImageFromCloudinary(publicId);
+    } catch (error) {
+      console.log('Cloudinary delete failed, skipping to DB deletion...');
+    }
   }
 
   await Gallery.findByIdAndDelete(id);
@@ -65,6 +73,6 @@ const deleteGalleryItem = catchAsync(async (req: Request, res: Response) => {
 
 export const GalleryControllers = {
   createGalleryItem,
-  getAllGalleryItems, // এখন এটি স্কোপে আছে
+  getAllGalleryItems,
   deleteGalleryItem,
 };

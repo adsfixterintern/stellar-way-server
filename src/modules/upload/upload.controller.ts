@@ -4,7 +4,7 @@ import sendResponse from '../../app/utils/sendResponse';
 import { UploadService } from './upload.service';
 
 const uploadSingleImage = catchAsync(async (req: Request, res: Response) => {
-  const result = UploadService.processSingleFile(req.file as Express.Multer.File);
+  const result = await UploadService.processSingleFile(req.file as Express.Multer.File);
 
   if (!result) {
     throw new Error('No file selected!');
@@ -17,6 +17,7 @@ const uploadSingleImage = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 
 const uploadMultipleImages = catchAsync(async (req: Request, res: Response) => {
   const result = UploadService.processMultipleFiles(req.files as Express.Multer.File[]);

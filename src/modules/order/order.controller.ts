@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import catchAsync from '../../app/utils/catchAsync';
-import sendResponse from '../../app/utils/sendResponse';
-import { Order } from './order.model';
-import SSLCommerzPayment from 'sslcommerz-lts';
-import Stripe from 'stripe';
+import { Request, Response } from "express";
+import catchAsync from "../../app/utils/catchAsync";
+import sendResponse from "../../app/utils/sendResponse";
+import { Order } from "./order.model";
+import SSLCommerzPayment from "sslcommerz-lts";
+import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 // ১. ড্যাশবোর্ডের জন্য সব অর্ডার
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
@@ -13,8 +13,8 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 
   // ২. ডাটাবেজ থেকে নির্দিষ্ট পরিমাণ ডাটা আনা
   const result = await Order.find()
-    .populate('customerInfo.user')
-    .populate('items.menuId')
+    .populate("customerInfo.user")
+    .populate("items.menuId")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -25,7 +25,7 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'All orders fetched successfully!',
+    message: "All orders fetched successfully!",
     meta: {
       page,
       limit,
@@ -41,18 +41,20 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
   const { email } = req.params;
 
   if (!email) {
-    return res.status(400).json({ success: false, message: 'Email is required' });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
   }
 
   // ExactOptionalPropertyTypes এরর এড়াতে টাইপ কাস্টিং করা হয়েছে
-  const result = await Order.find({ 
-    'customerInfo.email': email as string 
+  const result = await Order.find({
+    "customerInfo.email": email as string,
   }).sort({ createdAt: -1 });
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Your orders fetched successfully!',
+    message: "Your orders fetched successfully!",
     data: result,
   });
 });
@@ -65,41 +67,41 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
   const finalOrderData = {
     ...orderData,
     transactionId,
-    paymentStatus: 'unpaid',
+    paymentStatus: "unpaid",
   };
-  
+
   const result = await Order.create(finalOrderData);
 
   const data = {
     total_amount: orderData.totalPrice,
-    currency: 'BDT',
+    currency: "BDT",
     tran_id: transactionId,
     success_url: `http://localhost:8000/api/v1/payment/success/${transactionId}`,
     fail_url: `http://localhost:8000/api/v1/payment/fail/${transactionId}`,
     cancel_url: `http://localhost:8000/api/v1/payment/cancel/${transactionId}`,
-    shipping_method: 'Courier',
-    product_name: 'Food Order',
-    product_category: 'Food',
-    product_profile: 'general',
+    shipping_method: "Courier",
+    product_name: "Food Order",
+    product_category: "Food",
+    product_profile: "general",
     cus_name: orderData.customerInfo.name,
     cus_email: orderData.customerInfo.email,
     cus_add1: orderData.address,
-    cus_country: 'Bangladesh',
+    cus_country: "Bangladesh",
     cus_phone: orderData.phone,
   };
 
   const sslcz = new (SSLCommerzPayment as any)(
     process.env.STORE_ID,
     process.env.STORE_PASSWORD,
-    false
+    false,
   );
 
   const apiResponse = await sslcz.init(data);
-  
+
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: 'Order placed, redirecting to payment gateway...',
+    message: "Order placed, redirecting to payment gateway...",
     data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
   });
 });
@@ -111,26 +113,26 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   const finalOrderData = {
     ...orderData,
     transactionId,
-    paymentStatus: 'unpaid',
-    paymentMethod: 'Stripe',
+    paymentStatus: "unpaid",
+    paymentMethod: "Stripe",
   };
-  
+
   const result = await Order.create(finalOrderData);
 
   // ২. Stripe Checkout Session তৈরি করা
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
+    payment_method_types: ["card"],
     line_items: orderData.items.map((item: any) => ({
       price_data: {
-        currency: 'usd', 
+        currency: "usd",
         product_data: {
-          name: 'Savory Nest Food Order',
+          name: "Savory Nest Food Order",
         },
         unit_amount: Math.round(orderData.totalPrice * 100), // সেন্টে কনভার্ট
       },
       quantity: 1,
     })),
-    mode: 'payment',
+    mode: "payment",
     // আপনার ফ্রন্টএন্ডের URL অনুযায়ী নিচের লিঙ্কগুলো সেট করুন
     success_url: `http://localhost:3000/payment/success/${transactionId}`,
     cancel_url: `http://localhost:3000/payment/cancel`,
@@ -144,10 +146,10 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: 'Stripe order initiated successfully!',
-    data: { 
-      order: result, 
-      paymentUrl: session.url // এই URL-এ ইউজারকে পাঠাতে হবে
+    message: "Stripe order initiated successfully!",
+    data: {
+      order: result,
+      paymentUrl: session.url, // এই URL-এ ইউজারকে পাঠাতে হবে
     },
   });
 });
@@ -159,13 +161,13 @@ const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await Order.findByIdAndUpdate(
     id,
     { deliveryStatus: status },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Delivery status updated!',
+    message: "Delivery status updated!",
     data: result,
   });
 });
@@ -178,13 +180,13 @@ const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await Order.findByIdAndUpdate(
     id,
     { paymentStatus: status },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Payment status updated!',
+    message: "Payment status updated!",
     data: result,
   });
 });
@@ -192,19 +194,19 @@ const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
 // ৬. সিঙ্গেল অর্ডার ডিটেইলস
 const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await Order.findById(id).populate('items.menuId');
+  const result = await Order.findById(id).populate("items.menuId");
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Order details fetched!',
+    message: "Order details fetched!",
     data: result,
   });
 });
 
 export const OrderControllers = {
-    createOrder,
-    createStripeOrder,
+  createOrder,
+  createStripeOrder,
   getAllOrders,
   getMyOrders,
   updateDeliveryStatus,
