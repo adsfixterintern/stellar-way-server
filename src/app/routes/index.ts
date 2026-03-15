@@ -5,6 +5,7 @@ import { BookingRoutes } from "../../modules/booking/booking.route";
 import { ChefRoutes } from "../../modules/chef/chef.route";
 
 import { NotificationRoutes } from "../../modules/notification/notification.route";
+
 import { MessageRoutes } from "../../modules/message/message.route";
 import { CategoryRoutes } from "../../modules/category/category.route";
 import { uploadRoutes } from "../../modules/upload/upload.route";
@@ -15,9 +16,36 @@ import { OrderRoutes } from "../../modules/order/order.route";
 import { RiderRoutes } from "../../modules/rider/rider.route";
 import { BlogRoutes } from "../../modules/blog/blog.route";
 
+import { FaqRoutes } from '../../modules/faq/faq.routes';
+import path from 'node:path';
+import { FeedbackRoutes } from '../../modules/feedback/feedback.route';
+import { EventRoutes } from "../../modules/event/event.route";
+import { Router } from 'express';
+import { MenuRoutes } from '../../modules/menu/menu.route';
+import { EventBookingRoutes } from "../../modules/event-booking/eventBooking.route";
 const router = Router();
 
 const moduleRoutes = [
+  { 
+    path: '/menu', 
+    route: MenuRoutes 
+  },
+  {
+    path: "/faq", 
+    route: FaqRoutes 
+  },
+  {
+    path: "/feedback",
+    route: FeedbackRoutes
+  },
+  {
+    path: "/events",
+    route: EventRoutes
+  },
+  {
+    path: "/event-bookings",
+    route: EventBookingRoutes
+  },
   { path: '/menu', route: MenuRoutes },
   { path: '/auth', route: UserRoutes },
   { path: '/bookings', route: BookingRoutes },
