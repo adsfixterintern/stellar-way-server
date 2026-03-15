@@ -10,7 +10,7 @@ export interface IOrder {
   address: string;
   items: {
     menuId: Types.ObjectId;
-    quantity: number; // মাস্ট লাগবে
+    quantity: number; 
     price: number;
   }[];
   totalPrice: number;
