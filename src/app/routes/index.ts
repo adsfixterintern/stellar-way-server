@@ -19,7 +19,6 @@ import path from "node:path";
 import { BlogRoutes } from "../../modules/blog/blog.route";
 
 import { FaqRoutes } from '../../modules/faq/faq.routes';
-import path from 'node:path';
 import { FeedbackRoutes } from '../../modules/feedback/feedback.route';
 import { EventRoutes } from "../../modules/event/event.route";
 
