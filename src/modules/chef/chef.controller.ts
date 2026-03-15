@@ -20,12 +20,15 @@ const createChef = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllChefs = catchAsync(async (req: Request, res: Response) => {
-  const result = await ChefServices.getAllChefsFromDB();
+  const result = await ChefServices.getAllChefsFromDB(req.query);
+
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Chefs retrieved successfully",
-    data: result,
+    meta: result.meta,
+    data: result.data,
   });
 });
 
@@ -36,7 +39,7 @@ const getSingleChef = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Chef retrieved successfully",
+    message: "Chef retrieved successfully ff",
     data: result,
   });
 });

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteNotification = exports.markAsRead = exports.createNotification = exports.getUserNotificationsByEmail = void 0;
 const notification_model_1 = require("./notification.model");
 const user_model_1 = require("../user/user.model");
+const socket_1 = require("../../app/utils/socket");
 const getUserNotificationsByEmail = async (req, res) => {
     try {
         const { email } = req.params;
@@ -34,12 +35,30 @@ const getUserNotificationsByEmail = async (req, res) => {
 exports.getUserNotificationsByEmail = getUserNotificationsByEmail;
 const createNotification = async (req, res) => {
     try {
-        const { title, message, type, userId } = req.body;
-        const result = await notification_model_1.Notification.create({ title, message, type, userId });
+        const { title, message, type, email } = req.body;
+        const user = await user_model_1.User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        const result = await notification_model_1.Notification.create({
+            title,
+            message,
+            type,
+            userId: user._id
+        });
+        if (socket_1.io) {
+            socket_1.io.to(user._id.toString()).emit('new-notification', {
+                _id: result._id,
+                title: result.title,
+                message: result.message,
+                type: result.type,
+                createdAt: result.createdAt
+            });
+        }
         res.status(201).json({ success: true, data: result });
     }
     catch (error) {
-        res.status(400).json({ success: false, message: 'Create error', error });
+        res.status(400).json({ success: false, message: 'Create error', error: error.message });
     }
 };
 exports.createNotification = createNotification;

@@ -9,7 +9,10 @@ const userSchema = new mongoose_1.Schema({
     password: { type: String, select: false },
     role: { type: String, enum: ['admin', 'user', 'rider', 'chef'], default: 'user' },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
-    image: { type: String }
+    image: { type: String },
+    // for reset pass 
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
 }, { timestamps: true });
 exports.User = (0, mongoose_1.model)('User', userSchema);
 const riderSchema = new mongoose_1.Schema({

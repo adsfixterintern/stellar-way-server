@@ -8,6 +8,9 @@ const catchAsync_1 = __importDefault(require("../../app/utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../app/utils/sendResponse"));
 const chef_service_1 = require("./chef.service");
 const createChef = (0, catchAsync_1.default)(async (req, res) => {
+    if (req.file) {
+        req.body.image = req.file.path;
+    }
     const result = await chef_service_1.ChefServices.createChefIntoDB(req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
@@ -17,12 +20,16 @@ const createChef = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getAllChefs = (0, catchAsync_1.default)(async (req, res) => {
-    const result = await chef_service_1.ChefServices.getAllChefsFromDB();
+    console.log("Chef Controller reached!"); // এই লগটি টার্মিনালে আসছে কি?
+    const result = await chef_service_1.ChefServices.getAllChefsFromDB(req.query);
+    // এটি দেখুন
+    console.log("Final result to send:", result);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
         message: "Chefs retrieved successfully",
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 const getSingleChef = (0, catchAsync_1.default)(async (req, res) => {
@@ -30,7 +37,7 @@ const getSingleChef = (0, catchAsync_1.default)(async (req, res) => {
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
-        message: "Chef retrieved successfully",
+        message: "Chef retrieved successfully ff",
         data: result,
     });
 });

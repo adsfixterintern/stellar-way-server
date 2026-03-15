@@ -18,9 +18,27 @@ const createBookingIntoDB = async (payload: IBooking) => {
 };
 
 
-const getAllBookingsFromDB = async () => {
-  const result = await Booking.find();
-  return result;
+const getAllBookingsFromDB = async (query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const result = await Booking.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Booking.countDocuments();
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data: result,
+  };
 };
 
 

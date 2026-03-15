@@ -13,9 +13,28 @@ const createRiderIntoDB = async (payload: IRider) => {
 };
 
 
+const getAllRidersFromDB = async (query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
 
-const getAllRidersFromDB = async () => {
-  return await Rider.find().populate('userId');
+  const result = await Rider.find()
+    .populate('userId')
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const total = await Rider.countDocuments();
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data: result,
+  };
 };
 
 const getSingleRiderFromDB = async (id: string) => {

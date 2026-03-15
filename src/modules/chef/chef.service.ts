@@ -5,8 +5,27 @@ const createChefIntoDB = async (payload: IChef) => {
   return await Chef.create(payload);
 };
 
-const getAllChefsFromDB = async () => {
-  return await Chef.find();
+const getAllChefsFromDB = async (query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const result = await Chef.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Chef.countDocuments();
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data: result,
+  };
 };
 
 const getSingleChefFromDB = async (id: string) => {

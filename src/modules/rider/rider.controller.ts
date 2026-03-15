@@ -15,12 +15,15 @@ const createRider = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllRiders = catchAsync(async (req: Request, res: Response) => {
-  const result = await RiderServices.getAllRidersFromDB();
+
+  const result = await RiderServices.getAllRidersFromDB(req.query);
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Riders retrieved successfully",
-    data: result,
+    meta: result.meta, 
+    data: result.data, 
   });
 });
 

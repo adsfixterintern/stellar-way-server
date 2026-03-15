@@ -16,17 +16,29 @@ const createBookingIntoDB = async (payload) => {
     const result = await booking_model_1.Booking.create(bookingData);
     return result;
 };
-// ২. সব বুকিং দেখা (এখন পপুলেশন লাগবে না, ডাটা অলরেডি বুকিং কালেকশনেই আছে)
-const getAllBookingsFromDB = async () => {
-    const result = await booking_model_1.Booking.find();
-    return result;
+const getAllBookingsFromDB = async (query) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const result = await booking_model_1.Booking.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+    const total = await booking_model_1.Booking.countDocuments();
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage: Math.ceil(total / limit),
+        },
+        data: result,
+    };
 };
-// ৩. একটি নির্দিষ্ট বুকিং দেখা
 const getSingleBookingFromDB = async (id) => {
     const result = await booking_model_1.Booking.findById(id);
     return result;
 };
-// ৪. আপডেট করা
 const updateBookingInDB = async (id, payload) => {
     const result = await booking_model_1.Booking.findByIdAndUpdate(id, payload, {
         new: true,
@@ -34,7 +46,6 @@ const updateBookingInDB = async (id, payload) => {
     });
     return result;
 };
-// ৫. ডিলিট করা
 const deleteBookingFromDB = async (id) => {
     const result = await booking_model_1.Booking.findByIdAndDelete(id);
     return result;
