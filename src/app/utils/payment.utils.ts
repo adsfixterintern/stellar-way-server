@@ -3,8 +3,8 @@ import Stripe from "stripe";
 import config from "../config";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-const serverUrl = config.clientUrl;
-const clientUrl = config.serverUrl;
+const serverUrl = config.serverUrl;
+const clientUrl = config.clientUrl;
 export const initiateSSLPayment = async (paymentData: any) => {
   const data = {
     total_amount: paymentData.totalPrice,

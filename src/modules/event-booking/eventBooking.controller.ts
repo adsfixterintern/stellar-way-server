@@ -46,6 +46,56 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// all booking get admin
+const getAllBookings = catchAsync(async (req: Request, res: Response) => {
+  const result = await EventBookingServices.getAllBookingsFromDB();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'All bookings fetched successfully',
+    data: result,
+  });
+});
+
+//user info
+const getMyBookings = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params; // অথবা auth middleware থেকে req.user.id
+  const result = await EventBookingServices.getMyBookingsFromDB(userId as string);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'My bookings fetched successfully',
+    data: result,
+  });
+});
+
+// single booking details
+const getSingleBooking = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await EventBookingServices.getSingleBookingFromDB(id as string);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Booking details fetched',
+    data: result,
+  });
+});
+
+// admin dashboard (Revenue & Stats)
+const getBookingAnalytics = catchAsync(async (req: Request, res: Response) => {
+  const result = await EventBookingServices.getBookingAnalyticsFromDB();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Booking analytics fetched successfully!',
+    data: result,
+  });
+});
+
 export const EventBookingControllers = {
-  createBooking,
+  createBooking, 
+  getAllBookings,
+  getMyBookings,
+  getSingleBooking,
+  getBookingAnalytics,
 };
