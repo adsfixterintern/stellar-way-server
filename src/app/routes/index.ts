@@ -1,5 +1,4 @@
-import { Router } from 'express';
-import { MenuRoutes } from '../../modules/menu/menu.route';
+
 import { UserRoutes } from '../../modules/user/user.route';
 import { BookingRoutes } from "../../modules/booking/booking.route";
 import { ChefRoutes } from "../../modules/chef/chef.route";
