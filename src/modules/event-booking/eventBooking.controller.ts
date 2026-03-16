@@ -59,7 +59,7 @@ const getAllBookings = catchAsync(async (req: Request, res: Response) => {
 
 //user info
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.params; // অথবা auth middleware থেকে req.user.id
+  const { userId } = req.params; 
   const result = await EventBookingServices.getMyBookingsFromDB(userId as string);
   sendResponse(res, {
     statusCode: httpStatus.OK,
