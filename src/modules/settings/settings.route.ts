@@ -9,8 +9,8 @@ const router = express.Router();
 router.get("/", SettingsController.getSettings);
 router.patch(
   "/update",
-  isAuthenticated,
-  authorizeRoles("admin"),
+  // isAuthenticated,
+  // authorizeRoles("admin"),
   upload.single('logo'),
   SettingsController.updateSettings,
 );
