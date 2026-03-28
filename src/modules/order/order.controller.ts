@@ -5,6 +5,9 @@ import { Order } from "./order.model";
 import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+
+
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -113,7 +116,6 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     const apiResponse = await sslcz.init(data);
 
     if (apiResponse?.GatewayPageURL) {
-      // সাকসেস হলে গেটওয়ে লিঙ্ক পাঠানো হচ্ছে
       sendResponse(res, {
         statusCode: 201,
         success: true,
@@ -121,7 +123,6 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
         data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
       });
     } else {
-      // যদি FAILED আসে (আপনার আগের এররটি এখানে ধরা পড়বে)
       console.error("--- SSLCommerz Detailed Error ---", apiResponse);
 
       return res.status(400).json({
@@ -140,9 +141,8 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 });
 const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
-  const transactionId = `STXP-${Date.now()}`; // Stripe এর জন্য আলাদা প্রিফিক্স
+  const transactionId = `STXP-${Date.now()}`; 
 
-  // ১. ডাটাবেজে অর্ডার সেভ করা
   const finalOrderData = {
     ...orderData,
     transactionId,
@@ -161,14 +161,13 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
         product_data: {
           name: "Savory Nest Food Order",
         },
-        unit_amount: Math.round(orderData.totalPrice * 100), // সেন্টে কনভার্ট
+        unit_amount: Math.round(orderData.totalPrice * 100),
       },
       quantity: 1,
     })),
     mode: "payment",
-    // আপনার ফ্রন্টএন্ডের URL অনুযায়ী নিচের লিঙ্কগুলো সেট করুন
     success_url: `http://localhost:3000/payment/success/${transactionId}`,
-    cancel_url: `http://localhost:3000/payment/cancel`,
+    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`,
     metadata: {
       orderId: result._id.toString(),
       transactionId: transactionId,
@@ -182,7 +181,7 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     message: "Stripe order initiated successfully!",
     data: {
       order: result,
-      paymentUrl: session.url, // এই URL-এ ইউজারকে পাঠাতে হবে
+      paymentUrl: session.url, 
     },
   });
 });
@@ -258,6 +257,36 @@ const updatePaymentStatusByTransactionId = catchAsync(
     });
   },
 );
+
+
+
+const paymentFailed = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.params;
+
+  const result = await Order.findOneAndUpdate(
+    { transactionId: transactionId as string } as any,
+    { paymentStatus: "failed" },
+    { new: true }
+  );
+
+  if (!result) {
+    return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail`);
+  }
+
+  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail?tranId=${transactionId}`);
+});
+
+const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.params;
+
+  await Order.findOneAndUpdate(
+    { transactionId: transactionId as string } as any,
+    { paymentStatus: "cancelled" }
+  );
+  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/cancel`);
+});
+
+
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -267,4 +296,6 @@ export const OrderControllers = {
   updatePaymentStatus,
   getOrderDetails,
   updatePaymentStatusByTransactionId,
+  paymentFailed,
+  paymentCancelled
 };
