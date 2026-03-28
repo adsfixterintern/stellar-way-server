@@ -5,7 +5,6 @@ import { Order } from "./order.model";
 import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-// ১. ড্যাশবোর্ডের জন্য সব অর্ডার
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -36,7 +35,6 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ২. নির্দিষ্ট ইউজারের অর্ডার (Email দিয়ে)
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
   const { email } = req.params;
 
@@ -59,51 +57,86 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ৩. অর্ডার ক্রিয়েট এবং পেমেন্ট ইনিশিয়েট
 const createOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
   const transactionId = `TXN-${Date.now()}`;
 
+  // ১. ডাটাবেজে অর্ডার সেভ করা
   const finalOrderData = {
     ...orderData,
     transactionId,
     paymentStatus: "unpaid",
   };
-
+  
   const result = await Order.create(finalOrderData);
 
-  const data = {
-    total_amount: orderData.totalPrice,
-    currency: "BDT",
-    tran_id: transactionId,
-    success_url: `http://localhost:8000/api/v1/payment/success/${transactionId}`,
-    fail_url: `http://localhost:8000/api/v1/payment/fail/${transactionId}`,
-    cancel_url: `http://localhost:8000/api/v1/payment/cancel/${transactionId}`,
-    shipping_method: "Courier",
-    product_name: "Food Order",
-    product_category: "Food",
-    product_profile: "general",
-    cus_name: orderData.customerInfo.name,
-    cus_email: orderData.customerInfo.email,
-    cus_add1: orderData.address,
-    cus_country: "Bangladesh",
-    cus_phone: orderData.phone,
-  };
+  // ২. SSLCommerz ডাটা অবজেক্ট (Fixed for Sandbox)
+  // স্যান্ডবক্সে amount অবশ্যই string এবং ০.০০ ফরম্যাটে হতে হয়
+const amount = Number(orderData.totalPrice).toFixed(2);
+const data = {
+  total_amount: amount, 
+  currency: 'BDT',
+  tran_id: transactionId,
+  success_url: `http://localhost:8000/api/v1/payment/success/${transactionId}`,
+  fail_url: `http://localhost:8000/api/v1/payment/fail/${transactionId}`,
+  cancel_url: `http://localhost:8000/api/v1/payment/cancel/${transactionId}`,
+  shipping_method: 'Courier',
+  product_name: 'Food Order',
+  product_category: 'Food',
+  product_profile: 'general',
+  cus_name: orderData.customerInfo?.name || 'Customer',
+  cus_email: orderData.customerInfo?.email || 'test@test.com',
+  cus_add1: orderData.address || 'Dhaka',
+  cus_city: 'Dhaka',
+  cus_country: 'Bangladesh',
+  cus_phone: orderData.phone || '01700000000',
+  // শিপিং ডাটা বাধ্যতামূলক
+  ship_name: 'Customer',
+  ship_add1: 'Dhaka',
+  ship_city: 'Dhaka',
+  ship_state: 'Dhaka',
+  ship_postcode: '1000',
+  ship_country: 'Bangladesh',
+};
+  // ৩. SSLCommerz ইনিশিয়ালাইজেশন
+  // IS_LIVE=false মানে আপনি স্যান্ডবক্স আইডি ব্যবহার করছেন। 
+  // sslcommerz-lts লাইব্রেরিতে স্যান্ডবক্সের জন্য ৩য় প্যারামিটার true দিতে হয়।
+  const isSandbox = process.env.IS_LIVE !== "true"; 
 
   const sslcz = new (SSLCommerzPayment as any)(
-    process.env.STORE_ID,
-    process.env.STORE_PASSWORD,
-    false,
+    process.env.STORE_ID, // adsfi69a9602610ea7
+    process.env.STORE_PASSWORD, // adsfi69a9602610ea7@ssl
+    isSandbox 
   );
 
-  const apiResponse = await sslcz.init(data);
-
-  sendResponse(res, {
-    statusCode: 201,
-    success: true,
-    message: "Order placed, redirecting to payment gateway...",
-    data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
-  });
+  try {
+    const apiResponse = await sslcz.init(data);
+    
+    if (apiResponse?.GatewayPageURL) {
+      // সাকসেস হলে গেটওয়ে লিঙ্ক পাঠানো হচ্ছে
+      sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: "Order placed, redirecting to payment gateway...",
+        data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
+      });
+    } else {
+      // যদি FAILED আসে (আপনার আগের এররটি এখানে ধরা পড়বে)
+      console.error("--- SSLCommerz Detailed Error ---", apiResponse);
+      
+      return res.status(400).json({
+        success: false,
+        message: apiResponse.failedreason || "SSLCommerz validation failed",
+        error: apiResponse
+      });
+    }
+  } catch (err) {
+    console.error("SSL Init Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during payment initialization",
+    });
+  }
 });
 const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
@@ -153,7 +186,6 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-// ৪. ডেলিভারি স্ট্যাটাস আপডেট
 const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -172,7 +204,6 @@ const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ৫. পেমেন্ট স্ট্যাটাস চেঞ্জ
 const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -191,7 +222,6 @@ const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ৬. সিঙ্গেল অর্ডার ডিটেইলস
 const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await Order.findById(id).populate("items.menuId");
@@ -203,7 +233,27 @@ const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const updatePaymentStatusByTransactionId = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.params;
+  const { status } = req.body;
 
+  const result = await Order.findOneAndUpdate(
+    { transactionId }, // আইডি নয়, ট্রানজেকশন আইডি দিয়ে খোঁজা হচ্ছে
+    { paymentStatus: status },
+    { new: true }
+  );
+
+  if (!result) {
+    return res.status(404).json({ success: false, message: "Order not found" });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Order payment status updated successfully!",
+    data: result,
+  });
+});
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -212,4 +262,5 @@ export const OrderControllers = {
   updateDeliveryStatus,
   updatePaymentStatus,
   getOrderDetails,
+  updatePaymentStatusByTransactionId,
 };

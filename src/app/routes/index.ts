@@ -18,8 +18,8 @@ import { SettingsRoutes } from "../../modules/settings/settings.route";
 import path from "node:path";
 import { BlogRoutes } from "../../modules/blog/blog.route";
 
-import { FaqRoutes } from '../../modules/faq/faq.routes';
-import { FeedbackRoutes } from '../../modules/feedback/feedback.route';
+import { FaqRoutes } from "../../modules/faq/faq.routes";
+import { FeedbackRoutes } from "../../modules/feedback/feedback.route";
 import { EventRoutes } from "../../modules/event/event.route";
 
 import { EventBookingRoutes } from "../../modules/event-booking/eventBooking.route";
@@ -30,30 +30,30 @@ const moduleRoutes = [
   { path: "/auth", route: UserRoutes },
   { path: "/bookings", route: BookingRoutes },
   { path: "/chefs", route: ChefRoutes },
-  { 
-    path: '/menu', 
-    route: MenuRoutes 
+  {
+    path: "/menu",
+    route: MenuRoutes,
   },
   {
-    path: "/faq", 
-    route: FaqRoutes 
+    path: "/faq",
+    route: FaqRoutes,
   },
   {
     path: "/feedback",
-    route: FeedbackRoutes
+    route: FeedbackRoutes,
   },
   {
     path: "/events",
-    route: EventRoutes
+    route: EventRoutes,
   },
   {
     path: "/event-bookings",
-    route: EventBookingRoutes
+    route: EventBookingRoutes,
   },
-  { path: '/menu', route: MenuRoutes },
-  { path: '/auth', route: UserRoutes },
-  { path: '/bookings', route: BookingRoutes },
-  { path: '/chefs', route: ChefRoutes },
+  { path: "/menu", route: MenuRoutes },
+  { path: "/auth", route: UserRoutes },
+  { path: "/bookings", route: BookingRoutes },
+  { path: "/chefs", route: ChefRoutes },
   // { path: "/menu", route: MenuRoutes },
   { path: "/notifications", route: NotificationRoutes },
   { path: "/messages", route: MessageRoutes },
@@ -67,10 +67,10 @@ const moduleRoutes = [
   { path: "/chats", route: ChatRoutes },
   { path: "/tracking", route: TrackingRoutes },
   { path: "/settings", route: SettingsRoutes },
-  { path: '/riders', route: RiderRoutes },
-  { path: "/chats", route: ChatRoutes },       
+  { path: "/riders", route: RiderRoutes },
+  { path: "/chats", route: ChatRoutes },
   { path: "/tracking", route: TrackingRoutes },
-  {path:'/blogs',route: BlogRoutes}
+  { path: "/blogs", route: BlogRoutes },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
