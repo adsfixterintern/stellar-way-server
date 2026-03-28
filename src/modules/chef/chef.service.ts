@@ -33,7 +33,10 @@ const getSingleChefFromDB = async (id: string) => {
 };
 
 const updateChefInDB = async (id: string, payload: Partial<IChef>) => {
-  return await Chef.findByIdAndUpdate(id, payload, { new: true });
+  return await Chef.findByIdAndUpdate(id, { $set: payload }, {
+    returnDocument: "after",
+    runValidators: true,
+  });
 };
 
 const deleteChefFromDB = async (id: string) => {

@@ -74,8 +74,9 @@ const forgetPasswordIntoDB = async (email: string) => {
   user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
 
   await user.save({ validateBeforeSave: false });
+  console.log(resetToken)
 
-  const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+  const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
 
   const htmlContent = `
   <div style="background-color: #f4f4f4; padding: 40px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
