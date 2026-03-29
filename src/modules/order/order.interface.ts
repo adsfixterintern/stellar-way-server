@@ -20,6 +20,7 @@ export interface IOrder {
   transactionId: string; 
   date: Date;
   deliveryOTP:string;
-  isOTPVerified:boolean
+  isOTPVerified:boolean;
+  riderId?: Types.ObjectId | null;
 }
 

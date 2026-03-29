@@ -5,6 +5,8 @@ import { Order } from "./order.model";
 import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
 import { sendEmail } from "../../app/utils/sendEmail";
+import { io } from "../../app/utils/socket";
+import { Notification } from "../notification/notification.model";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 
@@ -186,24 +188,65 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { status } = req.body;
 
-  const result = await Order.findByIdAndUpdate(
-    id,
-    { deliveryStatus: status },
-    { new: true, runValidators: true },
-  );
 
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Delivery status updated!",
-    data: result,
-  });
-});
+export const updateDeliveryStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // Order ID
+    const { status, riderId, riderName } = req.body;
 
+    const order: any = await Order.findByIdAndUpdate(
+      id,
+      { 
+        deliveryStatus: status, 
+        riderId: riderId,
+      },
+      { 
+        new: true,
+        runValidators: true 
+      }
+    ).populate("customerInfo.user"); 
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+
+    const io = req.app.get("socketio");
+    
+  
+    const targetUserId = order.customerInfo?.user?._id || order.customerInfo?.user;
+
+
+    if (targetUserId && io) {
+      io.to(targetUserId.toString()).emit("new-notification", {
+        title: status === 'on-the-way' ? "Order Picked Up! 🛵" : "Delivery Status Update",
+        message: `Rider ${riderName || 'Someone'} is ${status === 'on-the-way' ? 'on the way with' : 'updating'} your meal.`,
+        status: "unread",
+        createdAt: new Date()
+      });
+    }
+    if (io) {
+      io.to(id).emit("location-updates", {
+        status: status,
+        riderName: riderName
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: order
+    });
+
+  } catch (error: any) {
+    console.error("Update Status Error:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || "Something went wrong" 
+    });
+  }
+};
 
 
 
@@ -243,52 +286,56 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 const updatePaymentStatusByTransactionId = catchAsync(
   async (req: Request, res: Response) => {
     const { transactionId } = req.params;
-    const { status } = req.body; 
+    const { status } = req.body;
 
-    const otp = generateOTP(); 
+    const otp = generateOTP();
     let updateData: any = { paymentStatus: status };
-    
+
     if (status === 'paid') {
       updateData.deliveryOTP = otp;
+      updateData.deliveryStatus = 'preparing'; 
     }
 
     const result = await Order.findOneAndUpdate(
       { transactionId: transactionId as string } as any,
       updateData,
       { new: true },
-    );
+    ).populate("customerInfo.user");
 
-    if (!result) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+    if (!result) return res.status(404).json({ success: false, message: "Order not found" });
 
-    if (status === 'paid' && result.customerInfo?.email) {
-      const otpHtml = `
-        <div style="font-family: sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 20px;">
-          <h2 style="color: #1D3A15;">Payment Successful!</h2>
-          <p>Your order is confirmed. Please use the following OTP for delivery verification:</p>
-          <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; display: inline-block; margin: 20px 0;">
-            <span style="font-size: 32px; font-weight: 900; letter-spacing: 10px; color: #1D3A15;">${otp}</span>
-          </div>
-          <p style="color: #666; font-size: 12px;">Give this code to the rider when your food arrives.</p>
-        </div>
-      `;
-
-      try {
-        await sendEmail(result.customerInfo.email, otpHtml, "Your Delivery OTP - Savory Nest");
-      } catch (error) {
-        console.error("OTP Email Error:", error);
+    if (status === 'paid') {
+      const notifTitle = "Order Confirmed! 🎉";
+      const notifMessage = `Payment successful for Order #${result.transactionId.slice(-6)}. OTP: ${otp}.`;
+      
+      if (result.customerInfo?.user) {
+        const notification = await Notification.create({
+          title: notifTitle,
+          message: notifMessage,
+          type: 'order',
+          userId: result.customerInfo.user,
+          status: 'unread'
+        });
+        if (io) io.to(result.customerInfo.user.toString()).emit('new-notification', notification);
       }
+
+      if (io) {
+        io.to("all-riders").emit("new-order-available", {
+          title: "New Order Waiting! 🍔",
+          message: `Order at ${result.address || 'Customer Location'}. Accept now!`,
+          orderId: result._id,
+          transactionId: result.transactionId
+        });
+      }
+      const otpHtml = `<div style="text-align: center;"><h2>OTP: ${otp}</h2></div>`;
+      try { await sendEmail(result.customerInfo.email, otpHtml, "Delivery OTP"); } catch (e) {}
     }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: status === 'paid' ? "Payment success and OTP sent!" : "Status updated!",
-      data: result,
-    });
+    sendResponse(res, { statusCode: 200, success: true, message: "Success!", data: result });
   },
 );
+
+
 // admin dashboard
 const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
@@ -401,6 +448,39 @@ const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    const completedOrders = await Order.find({ 
+      "riderId.email": email, 
+      deliveryStatus: "delivered" 
+    });
+
+    const totalEarnings = completedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const completedCount = completedOrders.length;
+    const pendingCount = await Order.countDocuments({ 
+      "riderId.email": email, 
+      deliveryStatus: "on-the-way" 
+    });
+    const availableOrders = await Order.find({ 
+      deliveryStatus: "preparing",
+      paymentStatus: "paid" 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalEarnings,
+        completedCount,
+        pendingCount,
+        availableOrders
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -412,5 +492,6 @@ export const OrderControllers = {
   updatePaymentStatusByTransactionId,
   getOrderStats,
   paymentFailed,
-  paymentCancelled
+  paymentCancelled,
+  getRiderStatsAndOrders
 };

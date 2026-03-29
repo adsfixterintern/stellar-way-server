@@ -8,6 +8,7 @@ const riderSchema = new Schema<IRider>({
   licenseNumber: { type: String },
   identityCard: { type: String, required: true },
   area: { type: String, required: true },
+  
   status: { 
     type: String, 
     enum: ['pending', 'active', 'rejected'], 
@@ -15,15 +16,34 @@ const riderSchema = new Schema<IRider>({
     lowercase: true,
     trim: true
   },
+
+
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastLocation: {
+    lat: { type: Number, default: 0 },
+    lng: { type: Number, default: 0 }
+  },
+
   rating: { 
     type: Number, 
-    default: 0
+    default: 5.0
   },
+  
   totalDeliveries: { 
     type: Number, 
     default: 0 
+  },
+
+  isBusy: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
+
+riderSchema.index({ area: 1, isOnline: 1, isBusy: 1 });
 
 export const Rider = (models.RiderModel as Model<IRider>) || model<IRider>('RiderModel', riderSchema);

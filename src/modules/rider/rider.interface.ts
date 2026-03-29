@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 
 export interface IRider {
-  userId: Types.ObjectId;
+  _id?: Types.ObjectId; 
+  userId: Types.ObjectId; 
   phoneNumber: string; 
   vehicleType: 'bike' | 'cycle' | 'car';
   licenseNumber?: string;
@@ -9,5 +10,11 @@ export interface IRider {
   area: string;
   status: 'pending' | 'active' | 'rejected'; 
   rating: number;         
-  totalDeliveries?: number; 
+  totalDeliveries: number; 
+  isOnline?: boolean;
+  isBusy?: boolean;
+  lastLocation?: {
+    lat: number;
+    lng: number;
+  };
 }

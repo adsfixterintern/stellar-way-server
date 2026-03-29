@@ -5,14 +5,14 @@ const trackingSchema = new Schema<ITracking>(
   {
     orderId: { 
       type: Schema.Types.ObjectId, 
-      ref: 'Order', 
+      ref: 'Order', // আপনার অর্ডার মডেলের নাম
       required: true,
       unique: true, 
       index: true   
     },
     riderId: { 
       type: Schema.Types.ObjectId, 
-      ref: 'User', 
+      ref: 'RiderModel', // User এর বদলে RiderModel রেফার করুন
       required: true,
       index: true 
     },

@@ -33,6 +33,12 @@ const orderSchema = new Schema<IOrder>(
     date: { type: Date, default: Date.now },
     deliveryOTP: { type: String },
     isOTPVerified: { type: Boolean, default: false },
+   riderId: { 
+      type: Schema.Types.ObjectId, 
+      ref: "RiderModel", 
+      default: null 
+    },
+
   },
   { timestamps: true },
 );
