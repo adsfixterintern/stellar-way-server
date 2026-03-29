@@ -4,8 +4,15 @@ import config from '../config/index';
 import { User } from '../../modules/user/user.model';
 import catchAsync from '../utils/catchAsync';
 
+
 export const isAuthenticated = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies?.token;
+  let token = req.cookies?.token;
+
+
+  if (!token && req.headers.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
 
   if (!token) {
     return res.status(401).json({
@@ -14,27 +21,38 @@ export const isAuthenticated = catchAsync(async (req: Request, res: Response, ne
     });
   }
 
-  // token verify
-  const decoded = jwt.verify(token, config.jwt_secret as string) as JwtPayload;
+  try {
+ 
+    const decoded = jwt.verify(token, config.jwt_secret as string) as JwtPayload;
 
-  // user check
-  const user = await User.findById(decoded.id);
 
-  if (!user) {
-    return res.status(404).json({
+    const userId = decoded.id || decoded._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User no longer exists',
+      });
+    }
+
+  
+    if (user.status === 'blocked') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is blocked',
+      });
+    }
+
+ 
+    (req as any).user = user;
+    
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
       success: false,
-      message: 'User no longer exists',
+      message: 'Invalid or expired token',
     });
   }
-
-  if (user.status === 'blocked') {
-    return res.status(403).json({
-      success: false,
-      message: 'Your account is blocked',
-    });
-  }
-
-  // req te user set kora
-  (req as any).user = user;
-  next();
 });
