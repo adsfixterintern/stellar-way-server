@@ -34,3 +34,5 @@ const riderSchema = new Schema<IRider>({
 
 export const Rider = model<IRider>('Rider', riderSchema);
 
+
+

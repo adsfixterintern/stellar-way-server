@@ -4,6 +4,7 @@ import sendResponse from "../../app/utils/sendResponse";
 import { Order } from "./order.model";
 import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
+import { sendEmail } from "../../app/utils/sendEmail";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 
@@ -203,6 +204,9 @@ const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+
 const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -232,27 +236,55 @@ const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
 const updatePaymentStatusByTransactionId = catchAsync(
   async (req: Request, res: Response) => {
     const { transactionId } = req.params;
-    const { status } = req.body;
+    const { status } = req.body; 
+
+    const otp = generateOTP(); 
+    let updateData: any = { paymentStatus: status };
+    
+    if (status === 'paid') {
+      updateData.deliveryOTP = otp;
+    }
 
     const result = await Order.findOneAndUpdate(
       { transactionId: transactionId as string } as any,
-      { paymentStatus: status },
+      updateData,
       { new: true },
     );
 
     if (!result) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (status === 'paid' && result.customerInfo?.email) {
+      const otpHtml = `
+        <div style="font-family: sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 20px;">
+          <h2 style="color: #1D3A15;">Payment Successful!</h2>
+          <p>Your order is confirmed. Please use the following OTP for delivery verification:</p>
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; display: inline-block; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: 900; letter-spacing: 10px; color: #1D3A15;">${otp}</span>
+          </div>
+          <p style="color: #666; font-size: 12px;">Give this code to the rider when your food arrives.</p>
+        </div>
+      `;
+
+      try {
+        await sendEmail(result.customerInfo.email, otpHtml, "Your Delivery OTP - Savory Nest");
+      } catch (error) {
+        console.error("OTP Email Error:", error);
+      }
     }
 
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Order payment status updated successfully!",
+      message: status === 'paid' ? "Payment success and OTP sent!" : "Status updated!",
       data: result,
     });
   },

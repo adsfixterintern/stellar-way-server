@@ -14,10 +14,12 @@ export interface IOrder {
     price: number;
   }[];
   totalPrice: number;
-  paymentStatus: 'unpaid' | 'paid' | 'failed' | 'cancelled'; // আপনি 'unpaid' চেয়েছেন
+  paymentStatus: 'unpaid' | 'paid' | 'failed' | 'cancelled'; 
   deliveryStatus: 'pending' | 'confirmed' | 'cooking' | 'on-the-way' | 'delivered';
   paymentMethod: string;
   transactionId: string; 
   date: Date;
+  deliveryOTP:string;
+  isOTPVerified:boolean
 }
 

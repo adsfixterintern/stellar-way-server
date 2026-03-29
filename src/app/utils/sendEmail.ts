@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export const sendEmail = async (to: string, html: string) => {
+export const sendEmail = async (to: string, html: string, subject: string = "Notification from Savory Nest") => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -10,9 +10,9 @@ export const sendEmail = async (to: string, html: string) => {
   });
 
   await transporter.sendMail({
-    from: `"Food App" <${process.env.EMAIL_USER}>`,
+    from: `"Savory Nest" <${process.env.EMAIL_USER}>`,
     to,
-    subject: "Reset your password!",
+    subject: subject,
     html,
   });
 };
