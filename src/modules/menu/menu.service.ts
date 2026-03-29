@@ -58,20 +58,34 @@ const getSingleMenuFromDB = async (id: string) => {
   return result;
 };
 
-const updateMenuInDB = async (id: string, payload: Partial<IMenu>) => {
+
+const updateMenuInDB = async (id: string, payload: any) => {
+  let updateQuery = {};
+
+  if (payload.rating || payload.review) {
+    updateQuery = {
+      $push: {
+        reviews: {
+          rating: Number(payload.rating),
+          comment: payload.review,
+          userId: payload.userId, 
+        },
+      },
+    };
+  } else {
+   
+    updateQuery = { $set: payload };
+  }
+
   const result = await Menu.findByIdAndUpdate(
-    id, 
-    { $set: payload }, 
+    id,
+    updateQuery, 
     {
-      returnDocument: 'after', 
+      new: true,
       runValidators: true,
-      context: 'query' 
     }
   );
 
-  if (!result) {
-    throw new Error('Menu item not found to update!');
-  }
   return result;
 };
 
