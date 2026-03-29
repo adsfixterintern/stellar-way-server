@@ -1,6 +1,5 @@
 import { Schema, model } from 'mongoose';
 import { IEventBooking } from './eventBooking.interface';
-
 const eventBookingSchema = new Schema<IEventBooking>({
   userId: { 
     type: Schema.Types.ObjectId, 
@@ -17,13 +16,31 @@ const eventBookingSchema = new Schema<IEventBooking>({
     required: true,
     default: 1 
   },
+  selectedDate: { 
+    type: String, 
+    required: true
+  },
+  selectedTime: { 
+    type: String, 
+    required: true  
+  },
   transactionId: {
      type: String, 
-     required: true 
-    },
+     required: true,
+     unique: true 
+  },
   totalAmount: { 
     type: Number,
     required: true 
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['SSLCommerz', 'Stripe'],
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
   },
   paymentStatus: { 
     type: String, 
@@ -35,7 +52,4 @@ const eventBookingSchema = new Schema<IEventBooking>({
     default: Date.now 
   }
 }, { timestamps: true });
-
-eventBookingSchema.index({ userId: 1, eventId: 1 });
-
 export const EventBooking = model<IEventBooking>('EventBooking', eventBookingSchema);
