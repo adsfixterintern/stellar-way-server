@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import catchAsync from "../../app/utils/catchAsync";
 import { RiderServices } from "./rider.service";
 import sendResponse from "../../app/utils/sendResponse";
+import { Tracking } from "../tracking/tracking.model";
+import { Order } from "../order/order.model";
 
 
 const createRider = catchAsync(async (req: Request, res: Response) => {
@@ -13,6 +15,47 @@ const createRider = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const completeDeliveryWithOTP = catchAsync(async (req: Request, res: Response) => {
+  const { orderId, otp } = req.body; 
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res.status(404).json({ success: false, message: "Order not found" });
+  }
+
+  // OTP চেক করা
+  if (order.deliveryOTP !== otp) {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Invalid OTP! Delivery cannot be completed." 
+    });
+  }
+
+  const result = await Order.findByIdAndUpdate(
+    orderId,
+    { 
+      deliveryStatus: "delivered",
+      isOTPVerified: true ,
+      paymentStatus: "paid"
+    },
+    { new: true }
+  );
+
+  await Tracking.findOneAndUpdate(
+    { orderId },
+    { status: "delivered" }
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "OTP Verified! Order Delivered Successfully.",
+    data: result,
+  });
+});
+
 
 const getAllRiders = catchAsync(async (req: Request, res: Response) => {
 
@@ -68,4 +111,5 @@ export const RiderControllers = {
   getSingleRider,
   updateRider,
   deleteRider,
+  completeDeliveryWithOTP
 };

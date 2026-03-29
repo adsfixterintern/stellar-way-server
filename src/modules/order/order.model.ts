@@ -31,6 +31,8 @@ const orderSchema = new Schema<IOrder>(
     transactionId: { type: String, required: true },
     paymentMethod: { type: String, default: "SSLCommerz" },
     date: { type: Date, default: Date.now },
+    deliveryOTP: { type: String },
+    isOTPVerified: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

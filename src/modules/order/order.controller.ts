@@ -4,7 +4,11 @@ import sendResponse from "../../app/utils/sendResponse";
 import { Order } from "./order.model";
 import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
+import { sendEmail } from "../../app/utils/sendEmail";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+
+
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -61,25 +65,28 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
   const transactionId = `TXN-${Date.now()}`;
 
-  // ১. ডাটাবেজে অর্ডার সেভ করা
+  // ১. ডাটাবেজে অর্ডার সেভ করা (orderId যদি null আসে তবে সেটা বাদ দিয়ে সেভ হবে)
   const finalOrderData = {
     ...orderData,
     transactionId,
     paymentStatus: "unpaid",
   };
 
+  // যদি ফ্রন্টএন্ড থেকে orderId: null আসে, তবে সেটি ডিলিট করে দিন যাতে মঙ্গুজে এরর না দেয়
+  if (!finalOrderData.orderId) delete (finalOrderData as any).orderId;
+
   const result = await Order.create(finalOrderData);
 
-  // ২. SSLCommerz ডাটা অবজেক্ট (Fixed for Sandbox)
-  // স্যান্ডবক্সে amount অবশ্যই string এবং ০.০০ ফরম্যাটে হতে হয়
   const amount = Number(orderData.totalPrice).toFixed(2);
+  
+  // ২. SSLCommerz ডাটা অবজেক্ট
   const data = {
     total_amount: amount,
     currency: "BDT",
     tran_id: transactionId,
-    success_url: `http://localhost:3000/payment/success/${transactionId}`, // Frontend Success Page
-    fail_url: `http://localhost:3000/payment/fail/${transactionId}`, // Frontend Fail Page
-    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`, // Frontend Cancel Page
+    success_url: `http://localhost:3000/payment/success/${transactionId}`,
+    fail_url: `http://localhost:3000/payment/fail/${transactionId}`,
+    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`,
     shipping_method: "Courier",
     product_name: "Food Order",
     product_category: "Food",
@@ -87,10 +94,9 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     cus_name: orderData.customerInfo?.name || "Customer",
     cus_email: orderData.customerInfo?.email || "test@test.com",
     cus_add1: orderData.address || "Dhaka",
-    cus_city: "Dhaka",
+    cus_city: orderData.town || "Dhaka",
     cus_country: "Bangladesh",
     cus_phone: orderData.phone || "01700000000",
-    // শিপিং ডাটা বাধ্যতামূলক
     ship_name: "Customer",
     ship_add1: "Dhaka",
     ship_city: "Dhaka",
@@ -98,14 +104,13 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     ship_postcode: "1000",
     ship_country: "Bangladesh",
   };
-  // ৩. SSLCommerz ইনিশিয়ালাইজেশন
-  // IS_LIVE=false মানে আপনি স্যান্ডবক্স আইডি ব্যবহার করছেন।
-  // sslcommerz-lts লাইব্রেরিতে স্যান্ডবক্সের জন্য ৩য় প্যারামিটার true দিতে হয়।
-  const isSandbox = process.env.IS_LIVE !== "true";
 
-  const sslcz = new (SSLCommerzPayment as any)(
-    process.env.STORE_ID, // adsfi69a9602610ea7
-    process.env.STORE_PASSWORD, // adsfi69a9602610ea7@ssl
+  // ৩. SSLCommerz ইনিশিয়ালাইজেশন ফিক্স
+  const isSandbox = process.env.IS_LIVE !== "true"; // IS_LIVE=false হলে true হবে
+
+  const sslcz = new SSLCommerzPayment(
+    process.env.STORE_ID as string,
+    process.env.STORE_PASSWORD as string,
     isSandbox,
   );
 
@@ -113,7 +118,6 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     const apiResponse = await sslcz.init(data);
 
     if (apiResponse?.GatewayPageURL) {
-      // সাকসেস হলে গেটওয়ে লিঙ্ক পাঠানো হচ্ছে
       sendResponse(res, {
         statusCode: 201,
         success: true,
@@ -121,13 +125,11 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
         data: { order: result, paymentUrl: apiResponse.GatewayPageURL },
       });
     } else {
-      // যদি FAILED আসে (আপনার আগের এররটি এখানে ধরা পড়বে)
-      console.error("--- SSLCommerz Detailed Error ---", apiResponse);
-
+      // গেটওয়ে থেকে কোনো এরর আসলে সেটি ব্যাকএন্ড কনসোলে প্রিন্ট হবে
+      console.error("--- SSLCommerz Initialization Failed ---", apiResponse);
       return res.status(400).json({
         success: false,
         message: apiResponse.failedreason || "SSLCommerz validation failed",
-        error: apiResponse,
       });
     }
   } catch (err) {
@@ -140,9 +142,8 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 });
 const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
-  const transactionId = `STXP-${Date.now()}`; // Stripe এর জন্য আলাদা প্রিফিক্স
+  const transactionId = `STXP-${Date.now()}`; 
 
-  // ১. ডাটাবেজে অর্ডার সেভ করা
   const finalOrderData = {
     ...orderData,
     transactionId,
@@ -161,14 +162,13 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
         product_data: {
           name: "Savory Nest Food Order",
         },
-        unit_amount: Math.round(orderData.totalPrice * 100), // সেন্টে কনভার্ট
+        unit_amount: Math.round(orderData.totalPrice * 100),
       },
       quantity: 1,
     })),
     mode: "payment",
-    // আপনার ফ্রন্টএন্ডের URL অনুযায়ী নিচের লিঙ্কগুলো সেট করুন
     success_url: `http://localhost:3000/payment/success/${transactionId}`,
-    cancel_url: `http://localhost:3000/payment/cancel`,
+    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`,
     metadata: {
       orderId: result._id.toString(),
       transactionId: transactionId,
@@ -182,7 +182,7 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     message: "Stripe order initiated successfully!",
     data: {
       order: result,
-      paymentUrl: session.url, // এই URL-এ ইউজারকে পাঠাতে হবে
+      paymentUrl: session.url, 
     },
   });
 });
@@ -203,6 +203,9 @@ const updateDeliveryStatus = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+
 
 const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -233,27 +236,55 @@ const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
 const updatePaymentStatusByTransactionId = catchAsync(
   async (req: Request, res: Response) => {
     const { transactionId } = req.params;
-    const { status } = req.body;
+    const { status } = req.body; 
+
+    const otp = generateOTP(); 
+    let updateData: any = { paymentStatus: status };
+    
+    if (status === 'paid') {
+      updateData.deliveryOTP = otp;
+    }
 
     const result = await Order.findOneAndUpdate(
       { transactionId: transactionId as string } as any,
-      { paymentStatus: status },
+      updateData,
       { new: true },
     );
 
     if (!result) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (status === 'paid' && result.customerInfo?.email) {
+      const otpHtml = `
+        <div style="font-family: sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 20px;">
+          <h2 style="color: #1D3A15;">Payment Successful!</h2>
+          <p>Your order is confirmed. Please use the following OTP for delivery verification:</p>
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; display: inline-block; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: 900; letter-spacing: 10px; color: #1D3A15;">${otp}</span>
+          </div>
+          <p style="color: #666; font-size: 12px;">Give this code to the rider when your food arrives.</p>
+        </div>
+      `;
+
+      try {
+        await sendEmail(result.customerInfo.email, otpHtml, "Your Delivery OTP - Savory Nest");
+      } catch (error) {
+        console.error("OTP Email Error:", error);
+      }
     }
 
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: "Order payment status updated successfully!",
+      message: status === 'paid' ? "Payment success and OTP sent!" : "Status updated!",
       data: result,
     });
   },
@@ -340,6 +371,36 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+
+const paymentFailed = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.params;
+
+  const result = await Order.findOneAndUpdate(
+    { transactionId: transactionId as string } as any,
+    { paymentStatus: "failed" },
+    { new: true }
+  );
+
+  if (!result) {
+    return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail`);
+  }
+
+  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail?tranId=${transactionId}`);
+});
+
+const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
+  const { transactionId } = req.params;
+
+  await Order.findOneAndUpdate(
+    { transactionId: transactionId as string } as any,
+    { paymentStatus: "cancelled" }
+  );
+  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/cancel`);
+});
+
+
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -350,4 +411,6 @@ export const OrderControllers = {
   getOrderDetails,
   updatePaymentStatusByTransactionId,
   getOrderStats,
+  paymentFailed,
+  paymentCancelled
 };

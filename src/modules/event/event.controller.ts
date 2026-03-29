@@ -19,7 +19,6 @@ const createEvent = catchAsync(async (req, res) => {
   });
 });
 
-// get all event api. whit pagination
 const getAllEvents = catchAsync(async (req, res) => {
   const result = await EventServices.getAllEventsFromDB(req.query);
   sendResponse(res, {
