@@ -1,92 +1,77 @@
+
 import { Request, Response } from "express";
-import catchAsync from "../../app/utils/catchAsync";
+import catchAsync from "../../app/utils/catchAsync"; 
 import { RiderServices } from "./rider.service";
 import sendResponse from "../../app/utils/sendResponse";
 import { Tracking } from "../tracking/tracking.model";
 import { Order } from "../order/order.model";
 
 
-const createRider = catchAsync(async (req: Request, res: Response) => {
-  const result = await RiderServices.createRiderIntoDB(req.body);
+const applyRider = catchAsync(async (req: Request, res: Response) => {
+
+
+  const userId = (req as any).user?.id;
+
+  if (!userId) {
+    throw new Error("User authentication failed! Token might be missing.");
+  }
+
+
+  const result = await RiderServices.applyForRiderIntoDB({
+    ...req.body,
+    userId,
+  });
+
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: "Rider created successfully",
+    message: "Rider application submitted successfully! Waiting for admin approval.",
     data: result,
   });
 });
 
-const completeDeliveryWithOTP = catchAsync(async (req: Request, res: Response) => {
-  const { orderId, otp } = req.body; 
 
-  const order = await Order.findById(orderId);
-
-  if (!order) {
-    return res.status(404).json({ success: false, message: "Order not found" });
-  }
-
-  // OTP চেক করা
-  if (order.deliveryOTP !== otp) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Invalid OTP! Delivery cannot be completed." 
-    });
-  }
-
-  const result = await Order.findByIdAndUpdate(
-    orderId,
-    { 
-      deliveryStatus: "delivered",
-      isOTPVerified: true ,
-      paymentStatus: "paid"
-    },
-    { new: true }
-  );
-
-  await Tracking.findOneAndUpdate(
-    { orderId },
-    { status: "delivered" }
-  );
+const approveRider = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await RiderServices.approveRiderInDB(id as any);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "OTP Verified! Order Delivered Successfully.",
+    message: "Rider approved and role updated to 'rider'.",
     data: result,
   });
 });
 
 
 const getAllRiders = catchAsync(async (req: Request, res: Response) => {
-
   const result = await RiderServices.getAllRidersFromDB(req.query);
   
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Riders retrieved successfully",
-    meta: result.meta, 
-    data: result.data, 
+    meta: result.meta,
+    data: result.data,
   });
 });
 
+
 const getSingleRider = catchAsync(async (req: Request, res: Response) => {
-  const result = await RiderServices.getSingleRiderFromDB(
-    req.params.id as string,
-  );
+  const result = await RiderServices.getSingleRiderFromDB(req.params.id as any);
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Rider retrieved successfully",
+    message: "Rider details retrieved successfully",
     data: result,
   });
 });
 
+
 const updateRider = catchAsync(async (req: Request, res: Response) => {
-  const result = await RiderServices.updateRiderInDB(
-    req.params.id as string,
-    req.body,
-  );
+  const result = await RiderServices.updateRiderInDB(req.params.id as any, req.body);
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -95,8 +80,10 @@ const updateRider = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
 const deleteRider = catchAsync(async (req: Request, res: Response) => {
-  await RiderServices.deleteRiderFromDB(req.params.id as string);
+  await RiderServices.deleteRiderFromDB(req.params.id as any);
+  
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -106,10 +93,10 @@ const deleteRider = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const RiderControllers = {
-  createRider,
+  applyRider,
+  approveRider,
   getAllRiders,
   getSingleRider,
   updateRider,
   deleteRider,
-  completeDeliveryWithOTP
 };

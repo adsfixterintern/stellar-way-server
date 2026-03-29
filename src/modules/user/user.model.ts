@@ -24,15 +24,15 @@ const userSchema = new Schema<IUser>({
 
 export const User = model<IUser>('User', userSchema);
 
-const riderSchema = new Schema<IRider>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  rating: { type: Number, default: 5 },
-  totalDeliveries: { type: Number, default: 0 },
-  status: { type: String, enum: ['active', 'inactive', 'terminated'], default: 'active' },
-  vehicle: String
-});
+// const riderSchema = new Schema<IRider>({
+//   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+//   rating: { type: Number, default: 5 },
+//   totalDeliveries: { type: Number, default: 0 },
+//   status: { type: String, enum: ['active', 'inactive', 'terminated'], default: 'active' },
+//   vehicle: String
+// });
 
-export const Rider = model<IRider>('Rider', riderSchema);
+// export const Rider = model<IRider>('Rider', riderSchema);
 
 
 
