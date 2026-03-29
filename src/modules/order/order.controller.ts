@@ -289,6 +289,88 @@ const updatePaymentStatusByTransactionId = catchAsync(
     });
   },
 );
+// admin dashboard
+const getOrderStats = catchAsync(async (req: Request, res: Response) => {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  
+  // গত ১ বছরের ডাটার জন্য (জানুয়ারি থেকে ডিসেম্বর চার্টের জন্য)
+  const oneYearAgo = new Date(now.getFullYear(), 0, 1); // বর্তমান বছরের ১লা জানুয়ারি থেকে
+
+  const stats = await Order.aggregate([
+    {
+      $facet: {
+        // ১. আপনার আগের বর্তমান টোটাল
+        currentTotals: [
+          {
+            $group: {
+              _id: null,
+              totalPaidOrders: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] } },
+              totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$totalPrice", 0] } },
+              totalPendingOrders: { $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] } },
+            },
+          },
+        ],
+        // ২. আপনার আগের ট্রেন্ড ক্যালকুলেশন ডাটা
+        last30Days: [
+          { $match: { createdAt: { $gte: thirtyDaysAgo }, paymentStatus: "paid" } },
+          { $group: { _id: null, revenue: { $sum: "$totalPrice" }, count: { $sum: 1 } } },
+        ],
+        prev30Days: [
+          { $match: { createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }, paymentStatus: "paid" } },
+          { $group: { _id: null, revenue: { $sum: "$totalPrice" }, count: { $sum: 1 } } },
+        ],
+        // --- ৩. নতুন অংশ: মান্থলি চার্টের জন্য ডাটা ---
+        monthlyOverview: [
+          { $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" } },
+          {
+            $group: {
+              _id: { month: { $month: "$createdAt" } },
+              revenue: { $sum: "$totalPrice" },
+              orders: { $count: {} }
+            }
+          },
+          { $sort: { "_id.month": 1 } }
+        ]
+      },
+    },
+  ]);
+
+  const current = stats[0].currentTotals[0] || { totalPaidOrders: 0, totalRevenue: 0, totalPendingOrders: 0 };
+  const lastMonth = stats[0].last30Days[0] || { revenue: 0, count: 0 };
+  const prevMonth = stats[0].prev30Days[0] || { revenue: 0, count: 0 };
+
+  // মাসের নাম ম্যাপ করার জন্য
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const salesChartData = stats[0].monthlyOverview.map((item: any) => ({
+    name: monthNames[item._id.month - 1],
+    revenue: item.revenue,
+    orders: item.orders
+  }));
+
+  const calculateTrend = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return parseFloat((((curr - prev) / prev) * 100).toFixed(2));
+  };
+
+  const result = {
+    totalPaidOrders: current.totalPaidOrders,
+    orderTrend: calculateTrend(lastMonth.count, prevMonth.count),
+    totalRevenue: current.totalRevenue,
+    revenueTrend: calculateTrend(lastMonth.revenue, prevMonth.revenue),
+    totalPendingOrders: current.totalPendingOrders,
+    pendingTrend: 0,
+    salesChartData // এই ডাটাটি আপনার চার্টে বসবে
+  };
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Full Dashboard statistics fetched!",
+    data: result,
+  });
+});
 
 
 
@@ -328,6 +410,7 @@ export const OrderControllers = {
   updatePaymentStatus,
   getOrderDetails,
   updatePaymentStatusByTransactionId,
+  getOrderStats,
   paymentFailed,
   paymentCancelled
 };
