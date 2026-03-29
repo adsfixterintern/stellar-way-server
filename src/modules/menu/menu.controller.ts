@@ -82,10 +82,22 @@ const deleteMenu = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getLowStockMenus = catchAsync(async (req: Request, res: Response) => {
+  const result = await MenuService.getLowStockMenusFromDB();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Low stock menu items fetched successfully',
+    data: result,
+  });
+});
+
 export const MenuController = {
   createMenu,
   getAllMenus,
   getSingleMenu,
   updateMenu,
   deleteMenu,
+  getLowStockMenus
 };
