@@ -1,14 +1,55 @@
+
+
 import { Router } from 'express';
 import { RiderControllers } from './rider.controller';
-
+import { isAuthenticated } from '../../app/middlewares/auth.middleware'; 
+import { authorizeRoles } from '../../app/middlewares/authorization.middleware';
 
 const router = Router();
-console.log("Rider Router is hit!");
 
-router.post('/create-rider', RiderControllers.createRider);
-router.get('/', RiderControllers.getAllRiders);
-router.get('/:id', RiderControllers.getSingleRider);
-router.patch('/:id', RiderControllers.updateRider);
-router.delete('/:id', RiderControllers.deleteRider);
+
+router.post(
+  '/apply-rider1', 
+  isAuthenticated, 
+  RiderControllers.applyRider
+);
+
+
+router.patch(
+  '/approve-rider/:id', 
+  isAuthenticated, 
+  authorizeRoles('admin'), 
+  RiderControllers.approveRider
+);
+
+
+router.get(
+  '/', 
+  isAuthenticated, 
+  authorizeRoles('admin'), 
+  RiderControllers.getAllRiders
+);
+
+router.get(
+  '/:id', 
+  isAuthenticated, 
+  RiderControllers.getSingleRider
+);
+
+
+router.patch(
+  '/:id', 
+  isAuthenticated, 
+  authorizeRoles('admin', 'rider'), 
+  RiderControllers.updateRider
+);
+
+
+router.delete(
+  '/:id', 
+  isAuthenticated, 
+  authorizeRoles('admin'), 
+  RiderControllers.deleteRider
+);
 
 export const RiderRoutes = router;
