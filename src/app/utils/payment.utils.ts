@@ -2,39 +2,50 @@ import SSLCommerzPayment from "sslcommerz-lts";
 import Stripe from "stripe";
 import config from "../config";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-const serverUrl = config.serverUrl;
-const clientUrl = config.clientUrl;
+const stripe = new Stripe(config.stripe_secret_key as string);
+
 export const initiateSSLPayment = async (paymentData: any) => {
+  const transactionId = paymentData.transactionId;
+
   const data = {
     total_amount: paymentData.totalPrice,
     currency: "BDT",
-    tran_id: paymentData.transactionId,
-    success_url: `${serverUrl}/api/v1/payment/success/${paymentData.transactionId}`,
-    fail_url: `${serverUrl}/api/v1/payment/fail/${paymentData.transactionId}`,
-    cancel_url: `${serverUrl}/api/v1/payment/cancel/${paymentData.transactionId}`,
+    tran_id: transactionId,
+    // --- এখানে আপডেট করা হয়েছে ---
+    success_url: `${config.clientUrl}/event-booking/success/${transactionId}`,
+    fail_url: `${config.clientUrl}/event-booking/fail/${transactionId}`,
+    cancel_url: `${config.clientUrl}/event-booking/cancel/${transactionId}`,
+    // ----------------------------
     shipping_method: "No",
-    product_name: paymentData.productName || "Service Payment",
+    product_name: paymentData.productName || "Event Ticket",
     product_category: "Service",
     product_profile: "general",
-    cus_name: paymentData.customerName,
-    cus_email: paymentData.customerEmail,
-    cus_phone: paymentData.customerPhone,
+    cus_name: paymentData.customerName || "Customer",
+    cus_email: paymentData.customerEmail || "customer@example.com",
+    cus_phone: paymentData.customerPhone || "01700000000",
     cus_add1: "Dhaka",
     cus_country: "Bangladesh",
   };
-
   const sslcz = new (SSLCommerzPayment as any)(
-    process.env.STORE_ID,
-    process.env.STORE_PASSWORD,
-    false
+    config.store_id,
+    config.store_passwd,
+    false,
   );
 
   const apiResponse = await sslcz.init(data);
-  return apiResponse.GatewayPageURL;
+
+  if (apiResponse?.GatewayPageURL) {
+    return apiResponse.GatewayPageURL;
+  } else {
+    throw new Error(
+      "SSLCommerz initiation failed: " + JSON.stringify(apiResponse),
+    );
+  }
 };
 
 export const initiateStripePayment = async (paymentData: any) => {
+  const transactionId = paymentData.transactionId;
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
@@ -50,11 +61,11 @@ export const initiateStripePayment = async (paymentData: any) => {
       },
     ],
     mode: "payment",
-    success_url: `${clientUrl}/payment/success/${paymentData.transactionId}`,
-    cancel_url: `${clientUrl}/payment/cancel`,
+    success_url: `${config.clientUrl}/event-booking/success/${transactionId}`,
+    cancel_url: `${config.clientUrl}/event-booking/cancel/${transactionId}`,
     customer_email: paymentData.customerEmail,
     metadata: {
-      transactionId: paymentData.transactionId,
+      transactionId: transactionId,
     },
   });
 

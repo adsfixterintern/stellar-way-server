@@ -58,20 +58,34 @@ const getSingleMenuFromDB = async (id: string) => {
   return result;
 };
 
-const updateMenuInDB = async (id: string, payload: Partial<IMenu>) => {
+
+const updateMenuInDB = async (id: string, payload: any) => {
+  let updateQuery = {};
+
+  if (payload.rating || payload.review) {
+    updateQuery = {
+      $push: {
+        reviews: {
+          rating: Number(payload.rating),
+          comment: payload.review,
+          userId: payload.userId, 
+        },
+      },
+    };
+  } else {
+   
+    updateQuery = { $set: payload };
+  }
+
   const result = await Menu.findByIdAndUpdate(
-    id, 
-    { $set: payload }, 
+    id,
+    updateQuery, 
     {
-      returnDocument: 'after', 
+      new: true,
       runValidators: true,
-      context: 'query' 
     }
   );
 
-  if (!result) {
-    throw new Error('Menu item not found to update!');
-  }
   return result;
 };
 
@@ -87,11 +101,21 @@ const deleteMenuFromDB = async (id: string) => {
   return result;
 };
 
+const getLowStockMenusFromDB = async () => {
+  // $lt: 5 মানে stock ৫ এর নিচে হতে হবে
+  const result = await Menu.find({ stock: { $lt: 5 } })
+    .populate('categoryId')
+    .sort({ stock: 1 }); // সবচেয়ে কমগুলো আগে দেখাবে
+    
+  return result;
+};
+
 export const MenuService = {
   createMenuIntoDB,
   getAllMenusFromDB,
   getSingleMenuFromDB,
   updateMenuInDB,
   deleteMenuFromDB,
+  getLowStockMenusFromDB
 };
 

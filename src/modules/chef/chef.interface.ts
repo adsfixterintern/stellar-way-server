@@ -5,5 +5,5 @@ export interface IChef {
   bio: string;
   speciality: string;
   rating: number;
-  status: 'active' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended';
 }
