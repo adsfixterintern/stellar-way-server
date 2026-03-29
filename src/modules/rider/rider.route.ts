@@ -37,6 +37,8 @@ router.get(
 );
 
 
+
+//update rider
 router.patch(
   '/:id', 
   isAuthenticated, 
