@@ -3,20 +3,36 @@ import { Event } from './event.model';
 
 // create events api 
 const createEventIntoDB = async (payload: IEvent) => {
-  const result = await Event.create(payload);
+  const eventData = {
+    ...payload,
+    seat: Number(payload.seat),
+    price: Number(payload.price),
+    featured: String(payload.featured) === 'true' 
+  };
+  
+  const result = await Event.create(eventData);
   return result;
 };
+
 
 // all event get api pagination
 const getAllEventsFromDB = async (query: Record<string, unknown>) => {
   const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 3;
+  const limit = Number(query.limit) || 10; 
   const skip = (page - 1) * limit;
-  const result = await Event.find()
+
+  const filter: any = {};
+
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  const result = await Event.find(filter) 
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 }); 
-  const total = await Event.countDocuments();
+
+  const total = await Event.countDocuments(filter);
   const totalPage = Math.ceil(total / limit);
 
   return {
@@ -29,6 +45,7 @@ const getAllEventsFromDB = async (query: Record<string, unknown>) => {
     result,
   };
 };
+
 
 // single events get api 
 const getSingleEventFromDB = async (id: string) => {

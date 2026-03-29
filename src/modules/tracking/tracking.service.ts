@@ -1,12 +1,12 @@
 import { ITracking } from './tracking.interface';
 import { Tracking } from './tracking.model';
-
+import { Order } from '../order/order.model';
 
 const updateLiveLocation = async (payload: Partial<ITracking>) => {
   const { orderId, currentLocation, status, riderId } = payload;
 
   const result = await Tracking.findOneAndUpdate(
-    { orderId  } as any, 
+    { orderId: orderId as any }, 
     { 
       $set: { 
         currentLocation, 
@@ -16,19 +16,28 @@ const updateLiveLocation = async (payload: Partial<ITracking>) => {
       } 
     },
     { upsert: true, new: true } 
-  );
+  ).populate('riderId');
+
+  if (status === 'delivered') {
+    await Order.findByIdAndUpdate(orderId, { deliveryStatus: 'delivered' });
+  }
 
   return result;
 };
 
-
 const getOrderTrackingData = async (orderId: string) => {
   const result = await Tracking.findOne({ orderId })
-    .populate('orderId')
-    .populate('riderId');
+    .populate({
+      path: 'orderId',
+      select: 'deliveryStatus deliveryOTP address customerInfo transactionId' 
+    })
+    .populate({
+      path: 'riderId',
+      select: 'name phone vehicleInfo'
+    });
     
   if (!result) {
-    throw new Error('Tracking information not found for this order!');
+    throw new Error('Tracking information is not available yet. Please wait for the rider to pick up!');
   }
   
   return result;

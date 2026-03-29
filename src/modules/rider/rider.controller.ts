@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import catchAsync from "../../app/utils/catchAsync"; 
 import { RiderServices } from "./rider.service";
 import sendResponse from "../../app/utils/sendResponse";
+import { Tracking } from "../tracking/tracking.model";
+import { Order } from "../order/order.model";
 
 
 const applyRider = catchAsync(async (req: Request, res: Response) => {

@@ -5,7 +5,12 @@ import { EventServices } from './event.service';
 
 // create event api 
 const createEvent = catchAsync(async (req, res) => {
-const result = await EventServices.createEventIntoDB(req.body);
+  if (req.file) {
+    req.body.image = req.file.path; 
+  }
+
+  const result = await EventServices.createEventIntoDB(req.body);
+  
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -14,7 +19,6 @@ const result = await EventServices.createEventIntoDB(req.body);
   });
 });
 
-// get all event api. whit pagination
 const getAllEvents = catchAsync(async (req, res) => {
   const result = await EventServices.getAllEventsFromDB(req.query);
   sendResponse(res, {

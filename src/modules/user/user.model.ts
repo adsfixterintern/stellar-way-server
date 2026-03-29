@@ -34,3 +34,5 @@ export const User = model<IUser>('User', userSchema);
 
 // export const Rider = model<IRider>('Rider', riderSchema);
 
+
+
