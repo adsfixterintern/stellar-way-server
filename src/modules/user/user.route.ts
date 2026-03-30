@@ -36,4 +36,20 @@ router.patch('/change-password', isAuthenticated, UserController.changePassword)
 
 
 
+router.get(
+  "/all-users", 
+  // isAuthenticated, 
+  // authorizeRoles("admin"), 
+  UserController.getAllUsers
+);
+
+
+router.delete(
+  "/user/:id", 
+  // isAuthenticated, 
+  // authorizeRoles("admin"), 
+  UserController.deleteUser
+);
+
+
 export const UserRoutes = router;

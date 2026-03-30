@@ -202,6 +202,44 @@ const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
   return result;
 };
 
+const getAllUsersFromDB = async (query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+ 
+  const result = await User.find()
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const total = await User.countDocuments();
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data: result,
+  };
+};
+
+
+const deleteUserFromDB = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+ 
+  const result = await User.findByIdAndDelete(userId);
+
+  
+  return result;
+};
+
 export const UserService = {
   registerUserIntoDB,
   loginUserFromDB,
@@ -209,5 +247,8 @@ export const UserService = {
   resetPasswordIntoDB,
   changePasswordIntoDB,
   updateProfileInDB,
-  getMeFromDB
+  getMeFromDB,
+  getAllUsersFromDB,
+  deleteUserFromDB 
+
 };

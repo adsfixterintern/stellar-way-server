@@ -140,6 +140,34 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query; 
+  const result = await UserService.getAllUsersFromDB(query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users fetched successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await UserService.deleteUserFromDB(id as any);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
+
 export const UserController = {
   registerUser,
   loginUser,
@@ -149,5 +177,7 @@ export const UserController = {
   resetPassword,
   changePassword,
   updateProfile,
-  getMe
+  getMe,
+  getAllUsers ,
+  deleteUser
 };
