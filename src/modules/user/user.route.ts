@@ -36,8 +36,8 @@ router.patch(
 
 router.get(
   "/all-users",
-  // isAuthenticated,
-  // authorizeRoles("admin"),
+  isAuthenticated,
+  authorizeRoles("admin"),
   UserController.getAllUsers,
 );
 
