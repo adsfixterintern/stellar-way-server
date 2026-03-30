@@ -15,10 +15,10 @@ router.post(
   BlogController.createBlog
 );
 
-router.get('/',isAuthenticated, BlogController.getAllBlogs);
+router.get('/', BlogController.getAllBlogs);
 
 
-router.get('/:id',isAuthenticated, BlogController.getSingleBlog);
+router.get('/:id', BlogController.getSingleBlog);
 
 
 router.patch(
