@@ -9,7 +9,7 @@ const saveMessage = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: 'Message saved successfully',
+    message: 'Message sent and saved successfully',
     data: result,
   });
 });
@@ -21,7 +21,7 @@ const getOrderMessages = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Chat history fetched successfully',
+    message: 'Chat history retrieved successfully',
     data: result,
   });
 });
