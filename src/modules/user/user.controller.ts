@@ -3,6 +3,7 @@ import { UserService } from "./user.service";
 import { sendToken } from "../../app/utils/jwtToken";
 import catchAsync from "../../app/utils/catchAsync";
 import sendResponse from "../../app/utils/sendResponse";
+import { User } from "./user.model";
 
 
 // Register
@@ -167,7 +168,23 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const updateUserRole = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { role } = req.body;
 
+  const user = await User.findByIdAndUpdate(
+    id,
+    { role },
+    { new: true }
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Role updated successfully",
+    data: user,
+  });
+});
 export const UserController = {
   registerUser,
   loginUser,
@@ -179,5 +196,6 @@ export const UserController = {
   updateProfile,
   getMe,
   getAllUsers ,
-  deleteUser
+  deleteUser,
+  updateUserRole
 };

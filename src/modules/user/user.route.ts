@@ -26,28 +26,30 @@ router.patch(
   UserController.changePassword,
 );
 
-
-router.post('/forget-password', UserController.forgetPassword);
-router.patch('/reset-password/:token', UserController.resetPassword);
-router.patch('/change-password', isAuthenticated, UserController.changePassword);
-
-
-
+router.post("/forget-password", UserController.forgetPassword);
+router.patch("/reset-password/:token", UserController.resetPassword);
+router.patch(
+  "/change-password",
+  isAuthenticated,
+  UserController.changePassword,
+);
 
 router.get(
-  "/all-users", 
-  // isAuthenticated, 
-  // authorizeRoles("admin"), 
-  UserController.getAllUsers
+  "/all-users",
+  // isAuthenticated,
+  // authorizeRoles("admin"),
+  UserController.getAllUsers,
 );
-
 
 router.delete(
-  "/user/:id", 
-  // isAuthenticated, 
-  // authorizeRoles("admin"), 
-  UserController.deleteUser
+  "/user/:id",
+  // isAuthenticated,
+  // authorizeRoles("admin"),
+  UserController.deleteUser,
 );
-
+router.patch(
+  "/users/update-role/:id",
+  UserController.updateUserRole
+);
 
 export const UserRoutes = router;
