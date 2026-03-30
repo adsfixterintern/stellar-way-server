@@ -3,6 +3,7 @@ import catchAsync from '../../app/utils/catchAsync';
 import sendResponse from '../../app/utils/sendResponse';
 import { Gallery } from './gallery.model';
 import { UploadService } from '../upload/upload.service'; 
+import { get } from 'node:http';
 
 const createGalleryItem = catchAsync(async (req: Request, res: Response) => {
   const { categoryId, sortOrder } = req.body;
