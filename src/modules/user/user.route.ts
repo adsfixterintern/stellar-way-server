@@ -11,29 +11,20 @@ router.post("/logout", UserController.logoutUser);
 
 router.get(
   "/admin-dashboard",
-  isAuthenticated, 
+  isAuthenticated,
   authorizeRoles("admin"),
-  UserController.getAdminData, 
+  UserController.getAdminData,
 );
 
-router.get(
-  "/me",
-  // isAuthenticated, 
-  UserController.getMe
-);
+router.patch("/update-profile", isAuthenticated, UserController.updateProfile);
 
+router.post("/forget-password", UserController.forgetPassword);
+router.patch("/reset-password/:token", UserController.resetPassword);
 router.patch(
-  "/update-profile",
-  // isAuthenticated, 
-  UserController.updateProfile
+  "/change-password",
+  isAuthenticated,
+  UserController.changePassword,
 );
-
-
-router.post('/forget-password', UserController.forgetPassword);
-router.patch('/reset-password/:token', UserController.resetPassword);
-router.patch('/change-password', isAuthenticated, UserController.changePassword);
-
-
 
 
 export const UserRoutes = router;

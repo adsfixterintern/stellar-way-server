@@ -210,7 +210,7 @@ const getBookingAnalytics = catchAsync(async (req: Request, res: Response) => {
 });
 const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.params;
-  const status = req.query.status as string; // টাইপ কাস্টিং নিশ্চিত করুন
+  const status = req.query.status as string; 
 
   if (!transactionId) {
     throw new Error("Transaction ID is required!");
