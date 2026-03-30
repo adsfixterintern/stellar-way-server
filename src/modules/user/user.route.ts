@@ -27,4 +27,27 @@ router.patch(
 );
 
 
+router.post('/forget-password', UserController.forgetPassword);
+router.patch('/reset-password/:token', UserController.resetPassword);
+router.patch('/change-password', isAuthenticated, UserController.changePassword);
+
+
+
+
+router.get(
+  "/all-users", 
+  // isAuthenticated, 
+  // authorizeRoles("admin"), 
+  UserController.getAllUsers
+);
+
+
+router.delete(
+  "/user/:id", 
+  // isAuthenticated, 
+  // authorizeRoles("admin"), 
+  UserController.deleteUser
+);
+
+
 export const UserRoutes = router;
