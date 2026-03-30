@@ -1,5 +1,12 @@
 import { Types } from "mongoose";
 
+export interface IRiderReview {
+  userId: Types.ObjectId;
+  rating: number;
+  comment?: string;
+  createdAt?: Date;
+}
+
 export interface IRider {
   _id?: Types.ObjectId; 
   userId: Types.ObjectId; 
@@ -17,4 +24,5 @@ export interface IRider {
     lat: number;
     lng: number;
   };
+  reviews?: IRiderReview[];
 }

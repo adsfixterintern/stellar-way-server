@@ -131,6 +131,35 @@ const rejectRider = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const updateRiderRating = catchAsync(async (req: Request, res: Response) => {
+  const { riderId, rating, comment } = req.body;
+  
+ 
+  const userId = (req as any).user?._id; 
+
+  if (!riderId || !rating) {
+    return res.status(400).json({
+      success: false,
+      message: "Rider ID and Rating are required!"
+    });
+  }
+
+  const result = await RiderServices.updateRiderRatingInDB(riderId, {
+    userId, 
+    rating: Number(rating),
+    comment: comment || "",
+  });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Rider rating and review updated successfully!",
+    data: result,
+  });
+});
+
 export const RiderControllers = {
   applyRider,
   approveRider,
@@ -138,5 +167,6 @@ export const RiderControllers = {
   getSingleRider,
   updateRider,
   deleteRider,
-  rejectRider
+  rejectRider,
+  updateRiderRating
 };

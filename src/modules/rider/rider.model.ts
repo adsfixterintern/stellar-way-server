@@ -17,7 +17,6 @@ const riderSchema = new Schema<IRider>({
     trim: true
   },
 
-
   isOnline: {
     type: Boolean,
     default: false
@@ -27,6 +26,7 @@ const riderSchema = new Schema<IRider>({
     lng: { type: Number, default: 0 }
   },
 
+  // গড় রেটিং (Average Rating)
   rating: { 
     type: Number, 
     default: 5.0
@@ -40,9 +40,16 @@ const riderSchema = new Schema<IRider>({
   isBusy: {
     type: Boolean,
     default: false
-  }
+  },
+  reviews: [
+    {
+      userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      rating: { type: Number, required: true, min: 1, max: 5 },
+      comment: { type: String, trim: true },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ]
 }, { timestamps: true });
-
 
 riderSchema.index({ area: 1, isOnline: 1, isBusy: 1 });
 

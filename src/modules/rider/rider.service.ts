@@ -1,7 +1,7 @@
 import { IRider } from "./rider.interface";
-import { Rider } from "./rider.model";
 import { User } from "../user/user.model";
 import mongoose from "mongoose";
+import { Rider } from "./rider.model";
 
 // rider.service.ts
 const applyForRiderIntoDB = async (payload: IRider) => {
@@ -113,6 +113,43 @@ const rejectRiderFromDB = async (id: string) => {
   return result;
 };
 
+
+
+const updateRiderRatingInDB = async (
+  riderId: string, 
+  payload: { userId: string, rating: number, comment?: string }
+) => {
+  const rider = await Rider.findById(riderId);
+  if (!rider) throw new Error("Rider not found!");
+
+  const { userId, rating, comment } = payload;
+  
+  // ক্যালকুলেশন লজিক
+  const currentTotalRatingCount = rider.reviews?.length || 0;
+  const currentAverageRating = rider.rating || 0;
+  
+  // নতুন গড় রেটিং (Average Rating) ক্যালকুলেশন
+  const updatedTotalReviews = currentTotalRatingCount + 1;
+  const newRating = ((currentAverageRating * currentTotalRatingCount) + rating) / updatedTotalReviews;
+
+  const result = await Rider.findByIdAndUpdate(
+    riderId,
+    { 
+      $push: { reviews: { userId, rating, comment } }, 
+      $set: { 
+        rating: Number(newRating.toFixed(1)),
+      },
+      $inc: { totalDeliveries: 1 } 
+    },
+    { 
+      returnDocument: 'after', 
+      runValidators: true 
+    }
+  ).populate('reviews.userId');
+
+  return result;
+};
+
 export const RiderServices = {
   applyForRiderIntoDB,
   approveRiderInDB,
@@ -120,5 +157,6 @@ export const RiderServices = {
   getSingleRiderFromDB,
   updateRiderInDB,
   deleteRiderFromDB,
-  rejectRiderFromDB 
+  rejectRiderFromDB,
+  updateRiderRatingInDB
 };

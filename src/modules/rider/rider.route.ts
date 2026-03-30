@@ -8,6 +8,12 @@ const router = Router();
 router.post("/apply-rider", RiderControllers.applyRider);
 
 router.patch(
+  '/update-rating', 
+  isAuthenticated, 
+  RiderControllers.updateRiderRating
+);
+
+router.patch(
   "/approve-rider/:id",
   // isAuthenticated,
   // authorizeRoles('admin'),
@@ -39,5 +45,6 @@ router.delete(
   // authorizeRoles("admin"),
   RiderControllers.deleteRider,
 );
+
 
 export const RiderRoutes = router;
