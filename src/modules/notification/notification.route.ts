@@ -6,11 +6,13 @@ import {
   markAsRead,
   clearAllNotificationsByEmail,
 } from './notification.controller';
+import { isAuthenticated } from '../../app/middlewares/auth.middleware';
+import { authorizeRoles } from '../../app/middlewares/authorization.middleware';
 
 const router = express.Router();
 
 
-router.get('/:email', getUserNotificationsByEmail);
+router.get('/:email',isAuthenticated, getUserNotificationsByEmail);
 
 
 router.post('/', createNotification);
@@ -19,9 +21,9 @@ router.post('/', createNotification);
 router.patch('/:id', markAsRead);
 
 
-router.delete('/:id', deleteNotification);
+router.delete('/:id',isAuthenticated, deleteNotification);
 
 
-router.delete('/clear/:email', clearAllNotificationsByEmail);
+router.delete('/clear/:email',isAuthenticated, clearAllNotificationsByEmail);
 
 export const NotificationRoutes = router;
