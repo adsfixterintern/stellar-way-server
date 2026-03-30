@@ -5,7 +5,7 @@ import { authorizeRoles } from "../../app/middlewares/authorization.middleware";
 
 const router = Router();
 
-router.post("/apply-rider", RiderControllers.applyRider);
+router.post("/apply-rider",isAuthenticated,authorizeRoles('user'), RiderControllers.applyRider);
 
 router.patch(
   '/update-rating', 
@@ -15,17 +15,17 @@ router.patch(
 
 router.patch(
   "/approve-rider/:id",
-  // isAuthenticated,
-  // authorizeRoles('admin'),
+  isAuthenticated,
+  authorizeRoles('admin'),
   RiderControllers.approveRider,
 );
 
-router.patch("/reject-rider/:id", RiderControllers.rejectRider);
+router.patch("/reject-rider/:id",isAuthenticated,authorizeRoles('admin'), RiderControllers.rejectRider);
 
 router.get(
   "/",
-  // isAuthenticated,
-  // authorizeRoles('admin'),
+  isAuthenticated,
+  authorizeRoles('admin'),
   RiderControllers.getAllRiders,
 );
 
@@ -41,8 +41,8 @@ router.patch(
 
 router.delete(
   "/:id",
-  // isAuthenticated,
-  // authorizeRoles("admin"),
+  isAuthenticated,
+  authorizeRoles("admin"),
   RiderControllers.deleteRider,
 );
 

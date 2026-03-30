@@ -43,8 +43,8 @@ router.get(
 
 router.delete(
   "/user/:id",
-  // isAuthenticated,
-  // authorizeRoles("admin"),
+  isAuthenticated,
+  authorizeRoles("admin"),
   UserController.deleteUser,
 );
 router.patch(
