@@ -14,13 +14,14 @@ const PORT = config.port;
 
 app.use(cors({
   origin: [
-    'http://localhost:3000', 
+    'http://localhost:3000',
     'https://stellar-way.vercel.app'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'] 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true
 }));
+
+
 
 app.use(cookieParser());
 app.use(express.json());
