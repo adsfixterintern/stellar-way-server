@@ -13,7 +13,7 @@ router.post(
   authorizeRoles('admin'),
   EventControllers.createEvent
 );
-router.get("/event",isAuthenticated,authorizeRoles('admin','chef','rider','rider'), EventControllers.getAllEvents);
+router.get("/event",EventControllers.getAllEvents);
 router.get("/event/:id",isAuthenticated,authorizeRoles('admin','chef','rider','user'), EventControllers.getSingleEvent);
 router.put("/event/:id", upload.single("image"),isAuthenticated,authorizeRoles('admin'),EventControllers.updateEvent);
 router.delete("/event/:id",isAuthenticated,authorizeRoles('admin'), EventControllers.deleteEvent);
