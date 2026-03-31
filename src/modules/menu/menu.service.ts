@@ -101,11 +101,21 @@ const deleteMenuFromDB = async (id: string) => {
   return result;
 };
 
+const getLowStockMenusFromDB = async () => {
+  // $lt: 5 মানে stock ৫ এর নিচে হতে হবে
+  const result = await Menu.find({ stock: { $lt: 5 } })
+    .populate('categoryId')
+    .sort({ stock: 1 }); // সবচেয়ে কমগুলো আগে দেখাবে
+    
+  return result;
+};
+
 export const MenuService = {
   createMenuIntoDB,
   getAllMenusFromDB,
   getSingleMenuFromDB,
   updateMenuInDB,
   deleteMenuFromDB,
+  getLowStockMenusFromDB
 };
 
