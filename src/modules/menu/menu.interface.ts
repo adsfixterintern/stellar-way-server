@@ -1,16 +1,15 @@
 import { Types } from 'mongoose';
 
-export interface ICategory {
-  name: string;
-  sortOrder: number;
-}
 
 export interface IMenu {
   title: string;
   subTitle?: string;
   description: string;
   price: number;
-  image: string;
+  image: {
+    url: string;
+    publicId: string;
+  };
   chefId: Types.ObjectId;
   categoryId: Types.ObjectId;
   stock: number; 
@@ -24,3 +23,4 @@ export interface IMenu {
     userId: Types.ObjectId;
   }[];
 }
+

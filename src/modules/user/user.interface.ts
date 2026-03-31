@@ -8,6 +8,9 @@ export interface IUser {
   role: 'admin' | 'user' | 'rider' | 'chef';
   status: 'active' | 'blocked';
   image?: string;
+
+ resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 }
 
 export interface IRider {
@@ -18,3 +21,5 @@ export interface IRider {
   status: 'active' | 'inactive' | 'terminated';
   vehicle: string;
 }
+
+

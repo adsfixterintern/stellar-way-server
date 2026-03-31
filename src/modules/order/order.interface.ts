@@ -10,14 +10,17 @@ export interface IOrder {
   address: string;
   items: {
     menuId: Types.ObjectId;
-    quantity: number;
+    quantity: number; 
     price: number;
   }[];
   totalPrice: number;
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: 'unpaid' | 'paid' | 'failed' | 'cancelled'; 
   deliveryStatus: 'pending' | 'confirmed' | 'cooking' | 'on-the-way' | 'delivered';
   paymentMethod: string;
-  riderId?: Types.ObjectId;
-  otp?: string;
+  transactionId: string; 
   date: Date;
+  deliveryOTP:string;
+  isOTPVerified:boolean;
+  riderId?: Types.ObjectId | null;
 }
+

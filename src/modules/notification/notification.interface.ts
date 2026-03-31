@@ -5,6 +5,7 @@ export interface INotification {
   message: string;
   type: 'order' | 'event' | 'system';
   userId: Types.ObjectId;
-  status: 'read' | 'unread';
+  status?: 'read' | 'unread';
   createdAt: Date;
+  updatedAt: Date;
 }

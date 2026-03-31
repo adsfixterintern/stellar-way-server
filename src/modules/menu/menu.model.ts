@@ -1,16 +1,15 @@
 import { Schema, model } from 'mongoose';
-import { IMenu, ICategory } from './menu.interface';
+import { IMenu } from './menu.interface';
 
-const categorySchema = new Schema<ICategory>({
-  name: { type: String, required: true },
-  sortOrder: { type: Number, default: 0 }
-});
-
-export const Category = model<ICategory>('Category', categorySchema);
 
 const menuSchema = new Schema<IMenu>({
   title: { type: String, required: true },
+  description: { type: String, required: true },
   price: { type: Number, required: true },
+  image: {
+    url: { type: String, required: true },
+    publicId: { type: String, required: false }
+  },
   stock: { type: Number, default: 0 },
   chefId: { type: Schema.Types.ObjectId, ref: 'Chef' },
   categoryId: { type: Schema.Types.ObjectId, ref: 'Category' },

@@ -5,6 +5,11 @@ export interface IEventBooking {
   eventId: Types.ObjectId;
   numberOfSeats: number;
   totalAmount: number;
+  transactionId: string;
   paymentStatus: 'pending' | 'paid' | 'cancelled';
+  paymentMethod: 'SSLCommerz' | 'Stripe';
+  phone: string;
+  selectedDate: string; 
+  selectedTime: string;
   bookingDate: Date;
 }
