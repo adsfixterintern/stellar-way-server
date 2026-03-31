@@ -16,6 +16,6 @@ router.patch('/status-by-transaction/:transactionId', OrderControllers.updatePay
 router.get('/stats/overview',isAuthenticated,authorizeRoles('admin','rider','user'), OrderControllers.getOrderStats);
 router.post("/payment/fail/:transactionId",isAuthenticated,authorizeRoles('user'), OrderControllers.paymentFailed);
 router.post("/payment/cancel/:transactionId",isAuthenticated,authorizeRoles('user'), OrderControllers.paymentCancelled);
-router.get("/rider-stats/:email",isAuthenticated,authorizeRoles('rider'), getRiderStatsAndOrders);
+router.get("/rider-stats/:email",isAuthenticated, getRiderStatsAndOrders);
 
 export const OrderRoutes = router;
