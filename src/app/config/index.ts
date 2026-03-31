@@ -5,7 +5,7 @@ dotenv.config({ path: path.join(process.cwd(), ".env") });
 
 const config = {
   mongo_db_url: process.env.MONGO_DB_URL,
-  port: process.env.PORT,
+  port: process.env.PORT || 5000,
  serverUrl: process.env.SERVER_URL || 'http://localhost:8000',
   clientUrl: process.env.clientUrl || 'http://localhost:3000',
   jwt_secret: process.env.JWT_SECRET,
