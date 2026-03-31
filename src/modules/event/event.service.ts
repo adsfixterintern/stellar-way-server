@@ -18,30 +18,63 @@ const createEventIntoDB = async (payload: IEvent) => {
 // all event get api pagination
 const getAllEventsFromDB = async (query: Record<string, unknown>) => {
   const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10; 
+  const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const filter: any = {};
-
   if (query.status) {
     filter.status = query.status;
   }
 
-  const result = await Event.find(filter) 
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 }); 
+  const result = await Event.aggregate([
+    { $match: filter },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'eventbookings', 
+        localField: '_id',
+        foreignField: 'eventId',
+        as: 'bookings',
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'bookings.userId',
+        foreignField: '_id',
+        as: 'bookedUsers',
+      },
+    },
+    {
+      $project: {
+        title: 1,
+        subTitle: 1,
+        date: 1,
+        time: 1,
+        image: 1,
+        seat: 1,
+        price: 1,
+        status: 1,
+        featured: 1,
+        bookedParticipants: {
+          $map: {
+            input: "$bookedUsers",
+            as: "user",
+            in: {
+              name: "$$user.name",
+              image: "$$user.image"
+            }
+          }
+        }
+      },
+    },
+  ]);
 
   const total = await Event.countDocuments(filter);
-  const totalPage = Math.ceil(total / limit);
-
   return {
-    meta: {
-      page,
-      limit,
-      total,
-      totalPage,
-    },
+    meta: { page, limit, total, totalPage: Math.ceil(total / limit) },
     result,
   };
 };
