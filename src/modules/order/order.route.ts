@@ -9,7 +9,7 @@ router.post('/create-order',isAuthenticated,authorizeRoles('user'), OrderControl
 router.get('/',isAuthenticated,authorizeRoles('admin'), OrderControllers.getAllOrders);
 router.get('/:email',isAuthenticated,authorizeRoles('user','rider'), OrderControllers.getMyOrders);
 router.get('/details/:id',isAuthenticated, OrderControllers.getOrderDetails);
-router.patch('/status/:id',isAuthenticated,authorizeRoles('admin'), OrderControllers.updatePaymentStatus);
+router.patch('/status/:id',isAuthenticated, OrderControllers.updatePaymentStatus);
 router.patch("/update-delivery-status/:id",isAuthenticated,authorizeRoles('rider'), updateDeliveryStatus);
 router.post('/create-stripe-order',isAuthenticated,authorizeRoles('user'), OrderControllers.createStripeOrder);
 router.patch('/status-by-transaction/:transactionId',isAuthenticated,authorizeRoles('user'), OrderControllers.updatePaymentStatusByTransactionId);
