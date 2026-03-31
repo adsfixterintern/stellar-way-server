@@ -52,4 +52,7 @@ router.patch(
   UserController.updateUserRole
 );
 
+
+router.get('/me', UserController.getMe);
+
 export const UserRoutes = router;
