@@ -9,17 +9,14 @@ const createBlog = async (payload: IBlog) => {
 
 const getAllBlogs = async () => {
   const result = await Blog.find()
-    .populate({
-      path: 'userId',
-      select: 'name image' 
-    })
+    .populate('userId')
     .populate('categoryId', 'name'); 
   return result;
 };
 
 const getSingleBlog = async (id: string) => {
   return await Blog.findById(id)
-    .populate('userId', 'name image')
+    .populate('userId')
     .populate('categoryId');
 };
 
