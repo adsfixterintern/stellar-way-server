@@ -53,4 +53,4 @@ const riderSchema = new Schema<IRider>({
 
 riderSchema.index({ area: 1, isOnline: 1, isBusy: 1 });
 
-export const Rider = (models.RiderModel as Model<IRider>) || model<IRider>('RiderModel', riderSchema);
+export const Rider = (models.RiderModel as Model<IRider>) || model<IRider>('Rider', riderSchema);

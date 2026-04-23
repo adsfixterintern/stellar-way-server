@@ -13,10 +13,17 @@ const PORT = config.port;
 
 
 app.use(cors({
-  origin: 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true
+  origin:  
+    'http://localhost:3000'
+  ,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
+
+
+
+
 
 
 app.use(cookieParser());

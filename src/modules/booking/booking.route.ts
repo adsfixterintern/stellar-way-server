@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/my-bookings',isAuthenticated,authorizeRoles('user'), BookingControllers.getMyBookings);
 
 
-router.post('/create-booking',isAuthenticated,authorizeRoles('user'), BookingControllers.createBooking);
+router.post('/create-booking',isAuthenticated,authorizeRoles('user','admin','rider','chef'), BookingControllers.createBooking);
 router.get('/',isAuthenticated,authorizeRoles('admin'), BookingControllers.getAllBookings);
 router.get('/:id',isAuthenticated,authorizeRoles('user'), BookingControllers.getSingleBooking);
 router.patch('/:id',isAuthenticated,authorizeRoles('user'), BookingControllers.updateBooking);

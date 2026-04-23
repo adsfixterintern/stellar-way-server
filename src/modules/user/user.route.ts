@@ -2,6 +2,7 @@ import express from "express";
 import { UserController } from "./user.controller";
 import { isAuthenticated } from "../../app/middlewares/auth.middleware";
 import { authorizeRoles } from "../../app/middlewares/authorization.middleware";
+import { upload } from "../../app/config/cloudinary.config";
 
 const router = express.Router();
 
@@ -16,7 +17,13 @@ router.get(
   UserController.getAdminData,
 );
 
-router.patch("/update-profile", isAuthenticated, UserController.updateProfile);
+router.patch(
+  '/update-profile',
+  isAuthenticated,
+  authorizeRoles('user', 'admin', 'rider'),
+  upload.single('file'), 
+  UserController.updateProfile
+);
 
 router.post("/forget-password", UserController.forgetPassword);
 router.patch("/reset-password/:token", UserController.resetPassword);

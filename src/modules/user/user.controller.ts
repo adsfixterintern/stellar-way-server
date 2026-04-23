@@ -4,6 +4,7 @@ import { sendToken } from "../../app/utils/jwtToken";
 import catchAsync from "../../app/utils/catchAsync";
 import sendResponse from "../../app/utils/sendResponse";
 import { User } from "./user.model";
+import { UploadService } from "../upload/upload.service";
 
 
 // Register
@@ -122,12 +123,19 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 // user.controller.ts
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
- const {userId}=req.body;
- 
-  
-  const updateData = req.body; 
+  const { userId } = req.body;
 
-  if (!updateData || Object.keys(updateData).length === 0) {
+  if (req.file) {
+    const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
+    if (uploadResult) {
+      req.body.image = uploadResult.url; 
+    }
+  }
+
+  const updateData = { ...req.body };
+  delete updateData.userId;
+
+  if (Object.keys(updateData).length === 0 && !req.file) {
     throw new Error("Please provide data to update your profile.");
   }
 

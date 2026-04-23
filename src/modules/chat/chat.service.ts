@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { Rider } from '../rider/rider.model';
 import { Chat } from './chat.model';
 
 const saveMessage = async (payload: any) => {
@@ -58,7 +59,7 @@ const getMessagesByOrder = async (orderId: string) => {
     orderId: new Types.ObjectId(orderId) 
   }).populate({
     path: 'messages.sender',
-    select: 'name avatarUrl role'
+    select: 'name image role'
   });
   
   return result;

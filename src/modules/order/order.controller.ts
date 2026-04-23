@@ -10,6 +10,7 @@ import { Notification } from "../notification/notification.model";
 import { model } from "mongoose";
 import { Rider } from "../rider/rider.model";
 import { User } from "../user/user.model";
+import config from "../../app/config";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 
@@ -96,9 +97,9 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     total_amount: amount,
     currency: "BDT",
     tran_id: transactionId,
-    success_url: `http://localhost:3000/payment/success/${transactionId}`,
-    fail_url: `http://localhost:3000/payment/fail/${transactionId}`,
-    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`,
+    success_url: `${config.clientUrl}/payment/success/${transactionId}`,
+    fail_url: `${config.clientUrl}/payment/fail/${transactionId}`,
+    cancel_url: `${config.clientUrl}/payment/cancel/${transactionId}`,
     shipping_method: "Courier",
     product_name: "Food Order",
     product_category: "Food",
@@ -179,8 +180,8 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
       quantity: 1,
     })),
     mode: "payment",
-    success_url: `http://localhost:3000/payment/success/${transactionId}`,
-    cancel_url: `http://localhost:3000/payment/cancel/${transactionId}`,
+    success_url: `${config.clientUrl}/payment/success/${transactionId}`,
+    cancel_url: `${config.clientUrl}/payment/cancel/${transactionId}`,
     metadata: {
       orderId: result._id.toString(),
       transactionId: transactionId,
@@ -457,10 +458,10 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   );
 
   if (!result) {
-    return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail`);
+    return res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`);
   }
 
-  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/fail?tranId=${transactionId}`);
+  res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`);
 });
 
 const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
@@ -470,7 +471,7 @@ const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
     { transactionId: transactionId as string } as any,
     { paymentStatus: "cancelled" }
   );
-  res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/payment/cancel`);
+  res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`);
 });
 
 

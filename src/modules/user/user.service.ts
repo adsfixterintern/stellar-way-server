@@ -3,6 +3,7 @@ import { User } from "./user.model";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendEmail } from "../../app/utils/sendEmail";
+import config from "../../app/config";
 
 const registerUserIntoDB = async (payload: IUser) => {
   // 1. Check if user already exists
@@ -76,7 +77,7 @@ const forgetPasswordIntoDB = async (email: string) => {
   await user.save({ validateBeforeSave: false });
   console.log(resetToken)
 
-  const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+  const resetLink = `${config.clientUrl}/reset-password/${resetToken}`;
 
   const htmlContent = `
   <div style="background-color: #f4f4f4; padding: 40px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">

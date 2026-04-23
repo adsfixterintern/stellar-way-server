@@ -35,7 +35,7 @@ const orderSchema = new Schema<IOrder>(
     isOTPVerified: { type: Boolean, default: false },
    riderId: { 
       type: Schema.Types.ObjectId, 
-      ref: "RiderModel", 
+      ref: "Rider", 
       default: null 
     },
 
