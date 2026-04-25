@@ -28,6 +28,7 @@ import { TableRoutes } from "../../modules/table/table.route";
 import { RestaurantStatsRoutes } from "../../modules/restaurantStats/restaurantStats.route";
 import { OwnerMessageRoutes } from "../../modules/ownerMessage/ownerMessage.route";
 import { ContactRoutes } from "../../modules/contact/contact.route";
+import { OfferRoutes } from "../../modules/offer/offer.route";
 
 const router = Router();
 
@@ -87,6 +88,10 @@ const moduleRoutes = [
   {
     path: "/contact",
     route: ContactRoutes,
+  },
+  {
+    path: "/offer",
+    route: OfferRoutes,
   },
 ];
 
