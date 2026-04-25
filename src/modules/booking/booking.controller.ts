@@ -3,9 +3,9 @@ import sendResponse from '../../app/utils/sendResponse';
 import catchAsync from '../../app/utils/catchAsync';
 import { BookingServices } from './booking.service';
 
-// ১. নির্দিষ্ট ইউজারের বুকিং দেখার জন্য নতুন কন্ট্রোলার
+
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.body; // ফ্রন্টএন্ড থেকে বডিতে পাঠানো আইডি
+  const { userId } = req.body; 
 
   if (!userId) {
     return sendResponse(res, {
@@ -26,13 +26,35 @@ const getMyBookings = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
 const createBooking = catchAsync(async (req: Request, res: Response) => {
+
   const result = await BookingServices.createBookingIntoDB(req.body);
+  // console.log(result);
 
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: 'Booking created successfully',
+    message: 'Table(s) reserved successfully!',
+    data: result,
+  });
+});
+
+
+const checkAvailability = catchAsync(async (req: Request, res: Response) => {
+  const { date, startTime, endTime } = req.query;
+
+  const result = await BookingServices.getAvailableTablesFromDB(
+    date as string,
+    startTime as string,
+    endTime as string
+  );
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Fetched successfully",
     data: result,
   });
 });
@@ -101,5 +123,6 @@ export const BookingControllers = {
   getSingleBooking,
   updateBooking,
   deleteBooking,
-  getMyBookings, // ২. এটি এখানে এক্সপোর্ট করতে ভুলবেন না
+  getMyBookings,
+  checkAvailability,
 };

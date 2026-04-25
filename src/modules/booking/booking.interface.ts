@@ -7,6 +7,8 @@ export interface IBooking {
   phone: string; 
   address: string;
   guest: number;
-  time: string;
-  date: string;
+  date: string;       // YYYY-MM-DD
+  startTime: string;  // Arrival Time
+  endTime: string;    // Departure Time
+  tableIds: Types.ObjectId[]; // Multiple Tables
 }
