@@ -35,31 +35,27 @@
 // };
 
 // const getAvailableTablesFromDB = async (date: string, startTime: string, endTime: string) => {
- 
+
 //   if (!date || !startTime || !endTime) return [];
 
- 
 //   const bookedBookings = await Booking.find({
 //     date: date,
 //     $and: [
-//       { startTime: { $lt: endTime } }, 
-//       { endTime: { $gt: startTime } }  
+//       { startTime: { $lt: endTime } },
+//       { endTime: { $gt: startTime } }
 //     ]
 //   }).select('tableIds');
 
- 
 //   if (!bookedBookings || bookedBookings.length === 0) {
 //     return [];
 //   }
 
-
-//   const bookedTableIds = bookedBookings.flatMap(booking => 
+//   const bookedTableIds = bookedBookings.flatMap(booking =>
 //     (booking?.tableIds || []).map(id => id?.toString())
 //   );
 
-
 //   const uniqueBookedIds = [...new Set(bookedTableIds.filter(id => id))];
-  
+
 //   return uniqueBookedIds;
 // };
 
@@ -105,7 +101,7 @@
 // };
 
 // const getMyBookingsFromDB = async (userId: string) => {
- 
+
 //   const result = await Booking.find({ userId }).sort({ createdAt: -1 });
 //   return result;
 // };
@@ -120,35 +116,44 @@
 //   getAvailableTablesFromDB,
 // };
 
-
 import { IBooking } from "./booking.interface";
 import { Booking } from "./booking.model";
 import { User } from "../user/user.model";
 
-
 const createBookingIntoDB = async (payload: Partial<IBooking>) => {
-  const result = await Booking.create(payload);
-  return result;
+  const { date, startTime, endTime, tableIds } = payload;
+
+  const isAlreadyBooked = await Booking.findOne({
+    date,
+    paymentStatus: "paid",
+    tableIds: { $in: tableIds },
+    $and: [{ startTime: { $lt: endTime } }, { endTime: { $gt: startTime } }],
+  } as any);
+
+  if (isAlreadyBooked) {
+    throw new Error("One or more tables are already booked for this time.");
+  }
+  return await Booking.create(payload);
 };
 
-
-const getAvailableTablesFromDB = async (date: string, startTime: string, endTime: string) => {
-  if (!date || !startTime || !endTime) return [];
+const getAvailableTablesFromDB = async (
+  date: string,
+  startTime: string,
+  endTime: string,
+) => {
+  if (!date || !startTime || !endTime) return []; 
 
   const bookedBookings = await Booking.find({
     date: date,
-    paymentStatus: "paid", 
-    $and: [
-      { startTime: { $lt: endTime } }, 
-      { endTime: { $gt: startTime } }  
-    ]
-  }).select('tableIds');
+    paymentStatus: "paid",
+    $and: [{ startTime: { $lt: endTime } }, { endTime: { $gt: startTime } }],
+  }).select("tableIds");
 
-  const bookedTableIds = bookedBookings.flatMap(booking => 
-    (booking?.tableIds || []).map(id => id?.toString())
+  const bookedTableIds = bookedBookings.flatMap((booking) =>
+    (booking?.tableIds || []).map((id) => id?.toString()),
   );
 
-  return [...new Set(bookedTableIds.filter(id => id))];
+  return [...new Set(bookedTableIds.filter((id) => id))];
 };
 
 // ৩. অ্যাডমিন সব বুকিং দেখবে (Pagination & Filters সহ)
@@ -157,8 +162,10 @@ const getAllBookingsFromDB = async (query: Record<string, any>) => {
   const skip = (Number(page) - 1) * Number(limit);
 
   const filter: any = {};
-  if (transactionId) filter.transactionId = { $regex: transactionId, $options: "i" };
-  if (paymentStatus && paymentStatus !== "all") filter.paymentStatus = paymentStatus;
+  if (transactionId)
+    filter.transactionId = { $regex: transactionId, $options: "i" };
+  if (paymentStatus && paymentStatus !== "all")
+    filter.paymentStatus = paymentStatus;
 
   const result = await Booking.find(filter)
     .populate("userId", "name email phone")
@@ -170,29 +177,35 @@ const getAllBookingsFromDB = async (query: Record<string, any>) => {
   const total = await Booking.countDocuments(filter);
 
   return {
-    meta: { page: Number(page), limit: Number(limit), total, totalPage: Math.ceil(total / Number(limit)) },
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPage: Math.ceil(total / Number(limit)),
+    },
     data: result,
   };
 };
-
 
 const getSingleBookingFromDB = async (id: string) => {
   return await Booking.findById(id).populate("userId tableIds");
 };
 
-
 const updateBookingInDB = async (id: string, payload: Partial<IBooking>) => {
-  return await Booking.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
+  return await Booking.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
 };
-
 
 const deleteBookingFromDB = async (id: string) => {
   return await Booking.findByIdAndDelete(id);
 };
 
-
 const getMyBookingsFromDB = async (userId: string) => {
-  return await Booking.find({ userId }).populate("tableIds").sort({ createdAt: -1 });
+  return await Booking.find({ userId })
+    .populate("tableIds")
+    .sort({ createdAt: -1 });
 };
 
 export const BookingServices = {

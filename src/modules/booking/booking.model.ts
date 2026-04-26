@@ -1,45 +1,42 @@
-import { Schema, model } from 'mongoose';
-import { IBooking } from './booking.interface';
+import { Schema, model } from "mongoose";
+import { IBooking } from "./booking.interface";
 
-// const bookingSchema = new Schema<IBooking>({
-//   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-//   name: { type: String, required: true },
-//   email: { type: String, required: true },
-//   phone: { type: String, required: true },
-//   address: { type: String, default: "Not Specified" },
-//   guest: { type: Number, required: true },
-//   date: { type: String, required: true },
-//   startTime: { type: String, required: true },
-//   endTime: { type: String, required: true },
-//   tableIds: [{ type: Schema.Types.ObjectId, ref: 'Table', required: true }]
-// }, { timestamps: true });
+const bookingSchema = new Schema<IBooking>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, default: "Not Specified" },
+    guest: { type: Number, required: true },
+    date: { type: String, required: true },
+    startTime: { type: String, required: true },
+    endTime: { type: String, required: true },
+    tableIds: [{ type: Schema.Types.ObjectId, ref: "Table", required: true }],
 
+    // পেমেন্ট সংক্রান্ত ফিল্ডস
+    totalPrice: { type: Number, required: true },
+    transactionId: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true, // Fast lookup er jonno indexing kora holo
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "cancelled"],
+      default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["SSLCommerz", "Stripe"],
+      required: true,
+    },
 
-
-const bookingSchema = new Schema<IBooking>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  address: { type: String, default: "Not Specified" },
-  guest: { type: Number, required: true },
-  date: { type: String, required: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
-  tableIds: [{ type: Schema.Types.ObjectId, ref: 'Table', required: true }],
-  // নতুন পেমেন্ট ফিল্ডস
-  totalPrice: { type: Number, required: true },
-  transactionId: { type: String, required: true, unique: true },
-  paymentStatus: { 
-    type: String, 
-    enum: ["pending", "paid", "cancelled"], 
-    default: "pending" 
+    qrCode: { type: String, default: "" },
   },
-  paymentMethod: { 
-    type: String, 
-    enum: ["SSLCommerz", "Stripe"], 
-    required: true 
-  }
-}, { timestamps: true });
+  { timestamps: true },
+);
 
-export const Booking = model<IBooking>('Booking', bookingSchema, 'booking');
+// Export the model
+export const Booking = model<IBooking>("Booking", bookingSchema, "booking");
