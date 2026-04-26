@@ -165,6 +165,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await UserService.deleteUserFromDB(id as any);
