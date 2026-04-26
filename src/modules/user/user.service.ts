@@ -40,7 +40,7 @@ const loginUserFromDB = async (payload: Pick<IUser, "email" | "password">) => {
   }
 
   if (user.status === "blocked") {
-    throw new Error("This user is blocked!");
+    throw new Error("Your account has been blocked by the admin. Please contact support.");
   }
 
   // password check kora
@@ -256,6 +256,22 @@ const deleteUserFromDB = async (userId: string) => {
   return result;
 };
 
+
+const updateUserStatusInDB = async (userId: string, status: 'active' | 'blocked') => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { status },
+    { new: true, runValidators: true }
+  );
+
+  return result;
+};
+
 export const UserService = {
   registerUserIntoDB,
   loginUserFromDB,
@@ -265,6 +281,6 @@ export const UserService = {
   updateProfileInDB,
   getMeFromDB,
   getAllUsersFromDB,
-  deleteUserFromDB 
-
+  deleteUserFromDB,
+  updateUserStatusInDB
 };
