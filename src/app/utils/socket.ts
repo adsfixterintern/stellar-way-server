@@ -1,62 +1,101 @@
-import { Server as SocketServer } from 'socket.io';
-import { Server as HttpServer } from 'http';
-import { ChatService } from '../../modules/chat/chat.service';
-import { TrackingService } from '../../modules/tracking/tracking.service';
+import { Server as SocketServer, Socket } from "socket.io";
+import { Server as HttpServer } from "http";
+import { ChatService } from "../../modules/chat/chat.service";
+import { TrackingService } from "../../modules/tracking/tracking.service";
 
 export let io: SocketServer;
 
+type SenderModel = "User" | "Rider";
+
+interface SendMessagePayload {
+  orderId: string;
+  sender: string;
+  senderModel: SenderModel;
+  message: string;
+}
+
+interface LocationPayload {
+  orderId: string;
+  currentLocation: {
+    lat: number;
+    lng: number;
+  };
+}
+
 export const setupSocket = (server: HttpServer) => {
   io = new SocketServer(server, {
-    cors: { origin: '*', methods: ['GET', 'POST'] },
+    cors: { origin: "*" },
   });
 
-  io.on('connection', (socket) => {
-    socket.on('join-order', (orderId: string) => {
+  io.on("connection", (socket: Socket) => {
+    console.log("Socket connected:", socket.id);
+
+    // ---------------------------
+    // JOIN ORDER ROOM
+    // ---------------------------
+    socket.on("join-order", (orderId: string) => {
+      if (!orderId) return;
       socket.join(orderId);
     });
 
-    socket.on('join-notification', (userId: string) => {
-      socket.join(userId);
-    });
-
-    socket.on('join-rider-room', () => {
-      socket.join('all-riders');
-    });
-
-    socket.on('send-message', async (data) => {
+    // ---------------------------
+    // CHAT MESSAGE
+    // ---------------------------
+    socket.on("send-message", async (data: SendMessagePayload) => {
       try {
-        const updatedChat: any = await ChatService.saveMessage(data);
-        if (updatedChat && updatedChat.messages) {
-          const latestMsg = updatedChat.messages[updatedChat.messages.length - 1];
-          io.to(data.orderId).emit('new-message', latestMsg);
+        console.log("SOCKET MESSAGE:", data);
+
+        if (
+          !data?.orderId ||
+          !data?.sender ||
+          !data?.message ||
+          !data?.senderModel
+        ) {
+          console.log("Invalid chat payload");
+          return;
+        }
+
+        const updatedChat = await ChatService.saveMessage(data);
+
+        const latestMsg = updatedChat?.messages?.at(-1);
+
+        if (latestMsg) {
+          io.to(data.orderId).emit("new-message", latestMsg);
         }
       } catch (error) {
-        console.error('Socket chat error:', error);
+        console.error("Socket Chat Error:", error);
       }
     });
 
-    socket.on('update-location', async (data) => {
+    // ---------------------------
+    // LIVE LOCATION TRACKING
+    // ---------------------------
+    socket.on("update-location", async (data: any) => {
       try {
-        await TrackingService.updateLiveLocation(data);
-        io.to(data.orderId).emit('location-updates', {
+        if (!data?.orderId || !data?.currentLocation || !data?.riderId) return;
+
+        await TrackingService.updateLiveLocation({
+          orderId: data.orderId,
+          riderId: data.riderId,
+          status: data.status,
+          currentLocation: data.currentLocation,
+        });
+
+        io.to(data.orderId).emit("location-updates", {
+          orderId: data.orderId,
           currentLocation: data.currentLocation,
           status: data.status,
-          riderId: data.riderId
         });
-        
-        if (data.status === 'near-location') {
-          io.to(data.orderId).emit('notification', {
-            title: "Rider is nearby!",
-            message: "Your rider is almost at your location. Please get ready with the OTP."
-          });
-        }
       } catch (error) {
-        console.error('Socket location error:', error);
+        console.error(error);
       }
     });
 
-    socket.on('disconnect', () => {
-      console.log('user disconnected')
+    // ---------------------------
+    // DISCONNECT
+    // ---------------------------
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected:", socket.id);
     });
   });
 
