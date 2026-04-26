@@ -66,8 +66,60 @@ const getSingleTable = async (req: Request, res: Response) => {
   }
 };
 
+
+
+const updateTable = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const body = req.body;
+    
+    const updateData: any = { ...body };
+
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+    if (body.totalSeat) {
+      updateData.totalSeat = Number(body.totalSeat);
+    }
+
+    const result = await TableService.updateTable(id as string, updateData);
+
+    res.status(200).json({
+      success: true,
+      message: "Table updated successfully!",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const deleteTable = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const result = await TableService.deleteTable(id as string);
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found!",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Table deleted successfully!",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const TableController = {
   createTable,
   getAllTables,
   getSingleTable,
+  updateTable, 
+  deleteTable,
 };

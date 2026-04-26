@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import { Types } from "mongoose";
-import { EventBooking } from "./eventBooking.model"; 
+import { EventBooking } from "./eventBooking.model";
 import config from "../../app/config";
 import catchAsync from "../../app/utils/catchAsync";
 import sendResponse from "../../app/utils/sendResponse";
 import { EventBookingServices } from "./eventBooking.service";
 import { Event } from "../event/event.model";
+import QRCode from "qrcode";
 import {
   initiateSSLPayment,
   initiateStripePayment,
@@ -37,12 +38,11 @@ const createSSLBooking = catchAsync(async (req: Request, res: Response) => {
   }
 
   try {
-    // ২. ইভেন্ট খুঁজে বের করা
     const event = await Event.findById(eventId);
     if (!event) throw new Error("Event not found in Database!");
 
-    if (event.seat < (numberOfSeats || 1)) {
-      throw new Error("Not enough seats available!");
+    if (event.availableSeat < (Number(numberOfSeats) || 1)) {
+      throw new Error("Sorry, not enough seats available!");
     }
 
     const transactionId = `TXN-EVT-${Date.now()}`;
@@ -66,7 +66,6 @@ const createSSLBooking = catchAsync(async (req: Request, res: Response) => {
     const result = await EventBookingServices.createBookingIntoDB(bookingData);
     console.log("3. Database Save Success!");
 
-    // ৪. পেমেন্ট গেটওয়ে ইনিশিয়েট করা (এখান থেকেই ৫০০ এরর আসার সম্ভাবনা বেশি)
     try {
       console.log("4. Calling SSLCommerz Gateway...");
       const paymentUrl = await initiateSSLPayment({
@@ -76,7 +75,7 @@ const createSSLBooking = catchAsync(async (req: Request, res: Response) => {
         customerName: userName || "Guest",
         customerEmail: userEmail || "guest@example.com",
         customerPhone: phone || "01700000000",
-      });
+      },'event-bookings');
 
       console.log("5. SSLCommerz URL Generated:", paymentUrl);
 
@@ -92,7 +91,7 @@ const createSSLBooking = catchAsync(async (req: Request, res: Response) => {
       });
     } catch (paymentError: any) {
       console.error("--- SSLCommerz Gateway Error ---");
-      console.error(paymentError); // এটি আপনার টার্মিনালে আসল এরর দেখাবে
+      console.error(paymentError);
       return sendResponse(res, {
         statusCode: httpStatus.INTERNAL_SERVER_ERROR,
         success: false,
@@ -126,8 +125,9 @@ const createStripeBooking = catchAsync(async (req: Request, res: Response) => {
 
   const event = await Event.findById(eventId);
   if (!event) throw new Error("Event not found!");
-  if (event.seat < numberOfSeats)
-    throw new Error("Not enough seats available!");
+  if (event.availableSeat < (Number(numberOfSeats) || 1)) {
+    throw new Error("Sorry, not enough seats available!");
+  }
 
   const transactionId = `STXP-EVT-${Date.now()}`;
   const totalAmount = event.price * numberOfSeats;
@@ -152,7 +152,7 @@ const createStripeBooking = catchAsync(async (req: Request, res: Response) => {
     transactionId,
     productName: event.title,
     customerEmail: userEmail,
-  });
+  },'event-bookings');
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -164,7 +164,8 @@ const createStripeBooking = catchAsync(async (req: Request, res: Response) => {
 
 // --- অন্যান্য কন্ট্রোলার ---
 const getAllBookings = catchAsync(async (req: Request, res: Response) => {
-  const result = await EventBookingServices.getAllBookingsFromDB();
+  const result = await EventBookingServices.getAllBookingsFromDB(req.query);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -208,34 +209,93 @@ const getBookingAnalytics = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.params;
-  const status = req.query.status as string; 
+  const status = req.query.status as string;
 
   if (!transactionId) {
     throw new Error("Transaction ID is required!");
   }
 
-  let updateStatus: 'pending' | 'paid' | 'cancelled' = 'pending';
-  let redirectPath = '/event-booking/fail';
+  let updateStatus: "pending" | "paid" | "cancelled" = "pending";
+  let redirectPath = "/event/fail";
 
-  if (status === 'success') {
-    updateStatus = 'paid';
-    redirectPath = `/event-booking/success/${transactionId}`;
-  } else if (status === 'cancel') {
-    updateStatus = 'cancelled';
-    redirectPath = '/event-booking/cancel';
+  if (status === "success") {
+    // ১. বুকিং খুঁজে বের করা এবং Event ও User ডাটা পপুলেট করা (QR Code-এ নাম দেখানোর জন্য)
+    const booking = await EventBooking.findOne({ transactionId }).populate(
+      "eventId userId",
+    );
+
+    if (!booking) {
+      throw new Error("Booking not found!");
+    }
+
+    // ২. ডাবল সিট কাটা রোধ করতে চেক (Idempotency check)
+    if (booking.paymentStatus !== "paid") {
+      const event: any = booking.userId; // Populate করার কারণে এটি এখন অবজেক্ট
+      const user: any = booking.userId;
+      const eventDetails: any = booking.eventId;
+
+      // ৩. QR Code এর জন্য ডাটা অবজেক্ট তৈরি
+      const qrPayload = JSON.stringify({
+        customer: user?.name || "Guest",
+        event: eventDetails?.title || "Event",
+        transaction: transactionId,
+        seats: booking.numberOfSeats,
+        time: booking.selectedTime,
+        date: booking.selectedDate,
+      });
+
+      const qrCodeBase64 = await QRCode.toDataURL(qrPayload, {
+        color: {
+          dark: "#1A4E11",
+          light: "#FFFFFF",
+        },
+        margin: 2,
+      });
+
+      await Promise.all([
+        Event.findByIdAndUpdate(booking.eventId, {
+          $inc: { availableSeat: -booking.numberOfSeats },
+        }),
+        EventBooking.findOneAndUpdate(
+          { transactionId },
+          {
+            paymentStatus: "paid",
+            qrCode: qrCodeBase64,
+          },
+        ),
+      ]);
+
+      updateStatus = "paid";
+    }
+
+    redirectPath = `/event/success/${transactionId}`;
+  } else if (status === "cancel") {
+    updateStatus = "cancelled";
+    redirectPath = "/event/fail";
+  } else {
+    await EventBooking.findOneAndUpdate(
+      { transactionId },
+      { paymentStatus: "cancelled" },
+    );
   }
-
-  await EventBooking.findOneAndUpdate(
-    { transactionId: transactionId as string }, 
-    { paymentStatus: updateStatus },
-    { new: true }
-  );
-
   res.redirect(`${config.clientUrl}${redirectPath}`);
 });
 
+const deleteBooking = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const result = await EventBookingServices.deleteBookingFromDB(id as string);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Booking deleted successfully",
+    data: result,
+  });
+});
 export const EventBookingControllers = {
   createSSLBooking,
   confirmPayment,
@@ -244,4 +304,5 @@ export const EventBookingControllers = {
   getMyBookings,
   getSingleBooking,
   getBookingAnalytics,
+  deleteBooking
 };

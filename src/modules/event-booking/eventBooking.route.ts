@@ -5,17 +5,64 @@ import { authorizeRoles } from "../../app/middlewares/authorization.middleware";
 
 const router = Router();
 
-router.post("/create-ssl-booking",isAuthenticated,authorizeRoles('user'), EventBookingControllers.createSSLBooking);
-router.post("/create-stripe-booking",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.createStripeBooking);
+// --- Public Routes ---
+router.post(
+  "/confirm-payment/:transactionId",
+  EventBookingControllers.confirmPayment,
+);
+router.get(
+  "/confirm-payment/:transactionId",
+  EventBookingControllers.confirmPayment,
+);
 
+// --- Protected Routes ---
+router.post(
+  "/create-ssl-booking",
+  isAuthenticated,
+  authorizeRoles("user", "admin", "chef", "rider"),
+  EventBookingControllers.createSSLBooking,
+);
 
-router.post("/confirm-payment/:transactionId",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.confirmPayment);
-router.get("/confirm-payment/:transactionId",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.confirmPayment);
+router.post(
+  "/create-stripe-booking",
+  isAuthenticated,
+  authorizeRoles("user", "admin", "chef", "rider"),
+  EventBookingControllers.createStripeBooking,
+);
 
-router.get("/all-bookings",isAuthenticated,authorizeRoles('admin'),  EventBookingControllers.getAllBookings);
-router.get("/analytics",isAuthenticated,authorizeRoles('admin'),EventBookingControllers.getBookingAnalytics);
-router.get("/my-bookings/:userId",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.getMyBookings);
-router.get("/:id",isAuthenticated,authorizeRoles('user'), EventBookingControllers.getSingleBooking);
-router.post("/confirm-payment/:transactionId",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.confirmPayment);
-router.get("/confirm-payment/:transactionId",isAuthenticated,authorizeRoles('user'),  EventBookingControllers.confirmPayment);
+router.get(
+  "/my-bookings/:userId",
+  isAuthenticated,
+  authorizeRoles("user", "admin", "chef", "rider"),
+  EventBookingControllers.getMyBookings,
+);
+
+router.get(
+  "/all-bookings",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  EventBookingControllers.getAllBookings,
+);
+
+router.get(
+  "/analytics",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  EventBookingControllers.getBookingAnalytics,
+);
+
+router.get(
+  "/:id",
+  isAuthenticated,
+  authorizeRoles("user", "admin", "chef", "rider"),
+  EventBookingControllers.getSingleBooking,
+);
+
+router.delete(
+  "/:id",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  EventBookingControllers.deleteBooking,
+);
+
 export const EventBookingRoutes = router;

@@ -9,5 +9,4 @@ export interface ITable {
   status: 'available' | 'booked' | 'maintenance';
 }
 
-// যদি ভবিষ্যতে স্ট্যাটিক মেথড লাগে তার জন্য
 export type TableModel = Model<ITable, Record<string, never>>;
