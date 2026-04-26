@@ -259,7 +259,7 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
             qrCode: qrCodeBase64,
           },
         );
-      } catch (err) {
+      } catch (err) { 
         await Booking.findOneAndUpdate(
           { transactionId },
           { paymentStatus: "paid" },

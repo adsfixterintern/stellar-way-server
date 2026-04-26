@@ -141,11 +141,11 @@ const getAvailableTablesFromDB = async (
   startTime: string,
   endTime: string,
 ) => {
-  if (!date || !startTime || !endTime) return []; 
+  if (!date || !startTime || !endTime) return [];
 
   const bookedBookings = await Booking.find({
     date: date,
-    paymentStatus: "paid",
+    paymentStatus: { $in: ["paid", "pending"] },
     $and: [{ startTime: { $lt: endTime } }, { endTime: { $gt: startTime } }],
   }).select("tableIds");
 

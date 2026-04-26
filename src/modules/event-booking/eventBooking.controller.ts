@@ -219,7 +219,7 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   }
 
   let updateStatus: "pending" | "paid" | "cancelled" = "pending";
-  let redirectPath = "/event-booking/fail";
+  let redirectPath = "/event/fail";
 
   if (status === "success") {
     // ১. বুকিং খুঁজে বের করা এবং Event ও User ডাটা পপুলেট করা (QR Code-এ নাম দেখানোর জন্য)
@@ -271,10 +271,10 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
       updateStatus = "paid";
     }
 
-    redirectPath = `/event-booking/success/${transactionId}`;
+    redirectPath = `/event/success/${transactionId}`;
   } else if (status === "cancel") {
     updateStatus = "cancelled";
-    redirectPath = "/event-booking/cancel";
+    redirectPath = "/event/fail";
   } else {
     await EventBooking.findOneAndUpdate(
       { transactionId },
