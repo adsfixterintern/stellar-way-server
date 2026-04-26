@@ -75,7 +75,7 @@ const createSSLBooking = catchAsync(async (req: Request, res: Response) => {
         customerName: userName || "Guest",
         customerEmail: userEmail || "guest@example.com",
         customerPhone: phone || "01700000000",
-      });
+      },'event-bookings');
 
       console.log("5. SSLCommerz URL Generated:", paymentUrl);
 
@@ -152,7 +152,7 @@ const createStripeBooking = catchAsync(async (req: Request, res: Response) => {
     transactionId,
     productName: event.title,
     customerEmail: userEmail,
-  });
+  },'event-bookings');
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

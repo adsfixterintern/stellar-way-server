@@ -4,28 +4,35 @@ import config from "../config";
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
-export const initiateSSLPayment = async (paymentData: any) => {
+export const initiateSSLPayment = async (
+  paymentData: any,
+  bookingType: "bookings" | "event-bookings",
+) => {
   const transactionId = paymentData.transactionId;
+
+  const baseUrl = `${config.serverUrl}/api/v1/${bookingType}/confirm-payment/${transactionId}`;
 
   const data = {
     total_amount: paymentData.totalPrice,
     currency: "BDT",
     tran_id: transactionId,
-    // --- এখানে আপডেট করা হয়েছে ---
-    success_url: `${config.clientUrl}/event-booking/success/${transactionId}`,
-    fail_url: `${config.clientUrl}/event-booking/fail/${transactionId}`,
-    cancel_url: `${config.clientUrl}/event-booking/cancel/${transactionId}`,
-    // ----------------------------
-    shipping_method: "No",
-    product_name: paymentData.productName || "Event Ticket",
+
+    success_url: `${baseUrl}?status=success`,
+    fail_url: `${baseUrl}?status=fail`,
+    cancel_url: `${baseUrl}?status=cancel`,
+
+    shipping_method: "NO",
+    product_name: paymentData.productName || "Service",
     product_category: "Service",
     product_profile: "general",
+
     cus_name: paymentData.customerName || "Customer",
     cus_email: paymentData.customerEmail || "customer@example.com",
     cus_phone: paymentData.customerPhone || "01700000000",
     cus_add1: "Dhaka",
     cus_country: "Bangladesh",
   };
+
   const sslcz = new (SSLCommerzPayment as any)(
     config.store_id,
     config.store_passwd,
@@ -36,15 +43,20 @@ export const initiateSSLPayment = async (paymentData: any) => {
 
   if (apiResponse?.GatewayPageURL) {
     return apiResponse.GatewayPageURL;
-  } else {
-    throw new Error(
-      "SSLCommerz initiation failed: " + JSON.stringify(apiResponse),
-    );
   }
+
+  throw new Error(
+    "SSLCommerz initiation failed: " + JSON.stringify(apiResponse),
+  );
 };
 
-export const initiateStripePayment = async (paymentData: any) => {
+export const initiateStripePayment = async (
+  paymentData: any,
+  bookingType: "bookings" | "event-bookings",
+) => {
   const transactionId = paymentData.transactionId;
+
+  const baseUrl = `${config.serverUrl}/api/v1/${bookingType}/confirm-payment/${transactionId}`;
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -61,11 +73,14 @@ export const initiateStripePayment = async (paymentData: any) => {
       },
     ],
     mode: "payment",
-    success_url: `${config.clientUrl}/event-booking/success/${transactionId}`,
-    cancel_url: `${config.clientUrl}/event-booking/cancel/${transactionId}`,
+
+    success_url: `${baseUrl}?status=success`,
+    cancel_url: `${baseUrl}?status=cancel`,
+
     customer_email: paymentData.customerEmail,
+
     metadata: {
-      transactionId: transactionId,
+      transactionId,
     },
   });
 
