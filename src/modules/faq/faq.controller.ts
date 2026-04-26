@@ -3,10 +3,8 @@ import catchAsync from '../../app/utils/catchAsync';
 import sendResponse from '../../app/utils/sendResponse';
 import { FaqServices } from './faq.service';
 
-// creat faq api
 const createFaq = catchAsync(async (req, res) => {
   const result = await FaqServices.createFaqIntoDB(req.body);
-
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -15,23 +13,20 @@ const createFaq = catchAsync(async (req, res) => {
   });
 });
 
-// gel all faq api
 const getAllFaqs = catchAsync(async (req, res) => {
   const result = await FaqServices.getAllFaqsFromDB(req.query);
-
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'FAQs fetched successfully',
-    data: result.result,
+    data: result.result, 
+    meta: result.meta    
   });
 });
 
-// get single faq api 
 const getSingleFaq = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await FaqServices.getSingleFaqFromDB(id as string);
-
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -40,7 +35,6 @@ const getSingleFaq = catchAsync(async (req, res) => {
   });
 });
 
-// update faq api 
 const updateFaq = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await FaqServices.updateFaqIntoDB(id as string, req.body);
@@ -62,7 +56,6 @@ const updateFaq = catchAsync(async (req, res) => {
   });
 });
 
-// delete faq api 
 const deleteFaq = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await FaqServices.deleteFaqFromDB(id as string);
@@ -83,6 +76,7 @@ const deleteFaq = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
 export const FaqControllers = {
   createFaq,
   getAllFaqs,

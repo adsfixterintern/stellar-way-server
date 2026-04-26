@@ -1,55 +1,56 @@
 import { IFaq } from './faq.interface';
 import { Faq } from './faq.model';
 
-// crat faq api
+
 const createFaqIntoDB = async (payload: IFaq) => {
-  const result = await Faq.create(payload);
+  const result = await Faq.create({
+    ...payload,
+    status: payload.status || 'active'
+  });
   return result;
 };
 
-// get all faq api
+
 const getAllFaqsFromDB = async (query: Record<string, unknown>) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
-    const skip = (page - 1) * limit;
-  const result = await Faq.find()
+  const skip = (page - 1) * limit;
+
+  
+  const filter: any = {};
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  const result = await Faq.find(filter) 
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
-  const total = await Faq.countDocuments();
+
+  const total = await Faq.countDocuments(filter); 
   const totalPage = Math.ceil(total / limit);
 
   return {
-    meta: {
-      page,
-      limit,
-      total,
-      totalPage,
-    },
+    meta: { page, limit, total, totalPage },
     result,
   };
 };
 
-// get single faq api
 const getSingleFaqFromDB = async (id: string) => {
-  const result = await Faq.findById(id);
-  return result;
+  return await Faq.findById(id);
 };
 
-// update faq
+
 const updateFaqIntoDB = async (id: string, payload: Partial<IFaq>) => {
   const result = await Faq.findByIdAndUpdate(id, payload, {
     new: true, 
     runValidators: true, 
   });
-
   return result;
 };
 
-// delete api 
 const deleteFaqFromDB = async (id: string) => {
-  const result = await Faq.findByIdAndDelete(id);
-  return result;
+  return await Faq.findByIdAndDelete(id);
 };
 
 export const FaqServices = {
