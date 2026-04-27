@@ -25,7 +25,7 @@ router.patch("/reject-rider/:id",isAuthenticated,authorizeRoles('admin'), RiderC
 router.get(
   "/",
   isAuthenticated,
-  authorizeRoles('admin', 'rider'),
+  authorizeRoles('admin', 'rider', 'user'),
   RiderControllers.getAllRiders,
 );
 
