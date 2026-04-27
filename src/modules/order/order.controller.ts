@@ -10,10 +10,14 @@ import { Notification } from "../notification/notification.model";
 import { Rider } from "../rider/rider.model";
 import { User } from "../user/user.model";
 import config from "../../app/config";
+import { Menu } from "../menu/menu.model";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
+<<<<<<< HEAD
 // ─── সব আগের function হুবহু একই আছে ─────────────────────────────────────────
 
+=======
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -45,6 +49,7 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userEmail = req.params.email as string;
+<<<<<<< HEAD
     const orders = await Order.find({
       "customerInfo.email": userEmail,
     } as any)
@@ -54,13 +59,46 @@ export const getMyOrders = async (req: Request, res: Response) => {
         populate: {
           path: "userId",
           select: "name image",
+=======
+
+    const orders = await Order.find({
+      "customerInfo.email": userEmail,
+    })
+      // 👤 full customer user object
+      .populate({
+        path: "customerInfo.user",
+      })
+
+      // 🍔 full menu object
+      .populate({
+        path: "items.menuId",
+      })
+
+      // 🚴 full rider + full rider user
+      .populate({
+        path: "riderId",
+        populate: {
+          path: "userId",
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
         },
       })
       .sort({ createdAt: -1 });
 
+<<<<<<< HEAD
     res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
+=======
+    return res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   }
 };
 
@@ -74,11 +112,19 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     paymentStatus: "unpaid",
   };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   if (!finalOrderData.orderId) delete (finalOrderData as any).orderId;
 
   const result = await Order.create(finalOrderData);
   const amount = Number(orderData.totalPrice).toFixed(2);
 
+<<<<<<< HEAD
+=======
+  // ২. SSLCommerz ডাটা অবজেক্ট
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   const data = {
     total_amount: amount,
     currency: "BDT",
@@ -104,7 +150,13 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     ship_country: "Bangladesh",
   };
 
+<<<<<<< HEAD
   const isSandbox = process.env.IS_LIVE !== "true";
+=======
+  // ৩. SSLCommerz ইনিশিয়ালাইজেশন ফিক্স
+  const isSandbox = process.env.IS_LIVE !== "true"; 
+
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   const sslcz = new SSLCommerzPayment(
     process.env.STORE_ID as string,
     process.env.STORE_PASSWORD as string,
@@ -173,7 +225,14 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     statusCode: 201,
     success: true,
     message: "Stripe order initiated successfully!",
+<<<<<<< HEAD
     data: { order: result, paymentUrl: session.url },
+=======
+    data: {
+      order: result,
+      paymentUrl: session.url,
+    },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   });
 });
 
@@ -202,21 +261,41 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     }
 
     let finalRiderId = orderExists.riderId;
+<<<<<<< HEAD
     if (riderId) {
       const riderProfile = await Rider.findOne({ userId: riderId });
       if (riderProfile) finalRiderId = riderProfile._id;
+=======
+
+    if (riderId) {
+      const riderProfile = await Rider.findOne({ userId: riderId });
+      if (riderProfile) {
+        finalRiderId = riderProfile._id;
+      }
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     }
 
     const updatedOrder: any = await Order.findByIdAndUpdate(
       id,
+<<<<<<< HEAD
       { deliveryStatus: status, riderId: finalRiderId },
+=======
+      {
+        deliveryStatus: status,
+        riderId: finalRiderId,
+      },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
       { new: true },
     ).populate("customerInfo.user");
 
     const socketio = req.app.get("socketio");
     const customerId =
+<<<<<<< HEAD
       updatedOrder.customerInfo?.user?._id ||
       updatedOrder.customerInfo?.user;
+=======
+      updatedOrder.customerInfo?.user?._id || updatedOrder.customerInfo?.user;
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
     if (socketio) {
       if (customerId) {
@@ -229,11 +308,24 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
           title = "Order Received! 🎉";
           message = "Your delivery is complete. Enjoy!";
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
         socketio
           .to(customerId.toString())
           .emit("new-notification", { title, message, status: "unread" });
       }
+<<<<<<< HEAD
       socketio.to(id).emit("location-updates", { status, riderName, currentLocation });
+=======
+
+      socketio.to(id).emit("location-updates", {
+        status,
+        riderName,
+        currentLocation,
+      });
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     }
 
     res.status(200).json({
@@ -299,8 +391,29 @@ const updatePaymentStatusByTransactionId = catchAsync(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+<<<<<<< HEAD
 
     if (status === "paid") {
+=======
+
+    if (status === "paid" && result.items && result.items.length > 0) {
+      try {
+        const stockUpdates = result.items.map((item: any) => {
+          return {
+            updateOne: {
+              filter: { _id: item.menuId },
+              update: { $inc: { stock: -item.quantity } }, 
+            },
+          };
+        });
+
+
+        await Menu.bulkWrite(stockUpdates);
+      } catch (stockError) {
+        console.error("Stock update failed:", stockError);
+      }
+
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
       const notifTitle = "Order Confirmed! 🎉";
       const notifMessage = `Payment successful for Order #${result.transactionId.slice(-6)}. OTP: ${otp}.`;
 
@@ -343,11 +456,21 @@ const updatePaymentStatusByTransactionId = catchAsync(
   },
 );
 
+<<<<<<< HEAD
+=======
+// admin dashboard
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+<<<<<<< HEAD
   const oneYearAgo = new Date(now.getFullYear(), 0, 1);
+=======
+
+  // গত ১ বছরের ডাটার জন্য (জানুয়ারি থেকে ডিসেম্বর চার্টের জন্য)
+  const oneYearAgo = new Date(now.getFullYear(), 0, 1); // বর্তমান বছরের ১লা জানুয়ারি থেকে
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
   const stats = await Order.aggregate([
     {
@@ -369,9 +492,13 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
                 },
               },
               totalPendingOrders: {
+<<<<<<< HEAD
                 $sum: {
                   $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0],
                 },
+=======
+                $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
               },
             },
           },
@@ -408,10 +535,14 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
         ],
         monthlyOverview: [
           {
+<<<<<<< HEAD
             $match: {
               createdAt: { $gte: oneYearAgo },
               paymentStatus: "paid",
             },
+=======
+            $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
           },
           {
             $group: {
@@ -434,9 +565,26 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const lastMonth = stats[0].last30Days[0] || { revenue: 0, count: 0 };
   const prevMonth = stats[0].prev30Days[0] || { revenue: 0, count: 0 };
 
+<<<<<<< HEAD
   const monthNames = [
     "Jan","Feb","Mar","Apr","May","Jun",
     "Jul","Aug","Sep","Oct","Nov","Dec",
+=======
+  // মাসের নাম ম্যাপ করার জন্য
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   ];
   const salesChartData = stats[0].monthlyOverview.map((item: any) => ({
     name: monthNames[item._id.month - 1],
@@ -476,11 +624,20 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   );
   if (!result) {
     return res.redirect(
+<<<<<<< HEAD
       `${process.env.CLIENT_URL || config.clientUrl}/payment/fail`,
     );
   }
   res.redirect(
     `${process.env.CLIENT_URL || config.clientUrl}/payment/fail?tranId=${transactionId}`,
+=======
+      `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`,
+    );
+  }
+
+  res.redirect(
+    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`,
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   );
 });
 
@@ -491,6 +648,7 @@ const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
     { paymentStatus: "cancelled" },
   );
   res.redirect(
+<<<<<<< HEAD
     `${process.env.CLIENT_URL || config.clientUrl}/payment/cancel`,
   );
 });
@@ -501,6 +659,16 @@ export const getRiderStatsAndOrders = async (
 ) => {
   try {
     const { email } = req.params;
+=======
+    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`,
+  );
+});
+
+export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     if (!email || typeof email !== "string") {
       return res
         .status(400)
@@ -508,6 +676,7 @@ export const getRiderStatsAndOrders = async (
     }
 
     const user = await User.findOne({ email });
+<<<<<<< HEAD
     if (!user)
       return res
         .status(404)
@@ -518,6 +687,20 @@ export const getRiderStatsAndOrders = async (
       return res
         .status(404)
         .json({ success: false, message: "Rider profile not found" });
+=======
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const riderProfile = await Rider.findOne({ userId: user._id });
+    if (!riderProfile) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Rider profile not found" });
+    }
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
     const riderProfileId = riderProfile._id;
 
@@ -745,4 +928,8 @@ export const OrderControllers = {
   paymentFailed,
   paymentCancelled,
   getRiderStatsAndOrders,
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2

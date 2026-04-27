@@ -1,5 +1,6 @@
 import { IChef } from "./chef.interface";
 import { Chef } from "./chef.model";
+import { FilterQuery } from "mongoose";
 
 const createChefIntoDB = async (payload: IChef) => {
   return await Chef.create(payload);
@@ -10,12 +11,28 @@ const getAllChefsFromDB = async (query: Record<string, unknown>) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const result = await Chef.find()
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const searchTerm = typeof query.searchTerm === 'string' ? query.searchTerm : "";
 
-  const total = await Chef.countDocuments();
+  const searchFilter: FilterQuery<typeof Chef> = searchTerm
+    ? { name: { $regex: searchTerm, $options: "i" } }
+    : {};
+
+  const result = await Chef.aggregate([
+    { $match: searchFilter },
+    {
+      $addFields: {
+        rating: { 
+          $ifNull: [{ $round: [{ $avg: "$reviews.rating" }, 1] }, 0]
+        },
+        totalReviews: { $size: { $ifNull: ["$reviews", []] } }
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit }
+  ]);
+
+  const total = await Chef.countDocuments(searchFilter);
 
   return {
     meta: {
@@ -33,10 +50,14 @@ const getSingleChefFromDB = async (id: string) => {
 };
 
 const updateChefInDB = async (id: string, payload: Partial<IChef>) => {
-  return await Chef.findByIdAndUpdate(id, { $set: payload }, {
-    returnDocument: "after",
-    runValidators: true,
-  });
+  return await Chef.findByIdAndUpdate(
+    id,
+    { $set: payload },
+    {
+      returnDocument: "after",
+      runValidators: true,
+    },
+  );
 };
 
 const deleteChefFromDB = async (id: string) => {

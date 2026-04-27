@@ -21,7 +21,7 @@ router.patch(
   '/update-profile',
   isAuthenticated,
   authorizeRoles('user', 'admin', 'rider'),
-  upload.single('file'), 
+  upload.single('image'), 
   UserController.updateProfile
 );
 
@@ -61,5 +61,13 @@ router.patch(
 
 
 router.get('/me', UserController.getMe);
+
+
+router.patch(
+  "/users/update-status/:id", 
+  isAuthenticated,
+  authorizeRoles("admin"),
+  UserController.updateUserStatus
+);
 
 export const UserRoutes = router;

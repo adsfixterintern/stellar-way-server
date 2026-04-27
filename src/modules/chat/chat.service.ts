@@ -1,71 +1,107 @@
-import { Types } from 'mongoose';
-import { Rider } from '../rider/rider.model';
-import { Chat } from './chat.model';
+import { Types, isValidObjectId } from "mongoose";
+import { Chat } from "./chat.model";
 
-const saveMessage = async (payload: any) => {
+export type SenderModel = "User" | "Rider";
+
+export interface ISaveMessagePayload {
+  orderId: string;
+  sender: string;
+  senderModel: string; // 👈 flexible input (fixes TS issue)
+  message: string;
+}
+
+// -----------------------------
+// NORMALIZER (IMPORTANT FIX)
+// -----------------------------
+const normalizeSenderModel = (value: string): SenderModel => {
+  return value?.toLowerCase() === "rider" ? "Rider" : "User";
+};
+
+// -----------------------------
+// SAVE MESSAGE
+// -----------------------------
+const saveMessage = async (payload: ISaveMessagePayload) => {
   const { orderId, sender, senderModel, message } = payload;
+
+  console.log("CHAT PAYLOAD:", payload);
+
+  // ✅ Validation
+  if (!orderId || !sender || !senderModel || !message) {
+    throw new Error("Missing required fields");
+  }
+
+  // ✅ ObjectId validation
+  if (!isValidObjectId(orderId) || !isValidObjectId(sender)) {
+    throw new Error("Invalid ObjectId");
+  }
+
+  // ✅ FIX: normalize senderModel safely
+  const normalizedSenderModel: SenderModel = normalizeSenderModel(senderModel);
 
   const existingChat = await Chat.findOne({
     orderId: new Types.ObjectId(orderId),
   });
 
-  if (existingChat && existingChat.messages && existingChat.messages.length > 0) {
-    const lastMessage = existingChat.messages[existingChat.messages.length - 1];
+  // ✅ Prevent duplicate spam messages
+  const lastMessage = existingChat?.messages?.at(-1);
 
-    if (lastMessage && lastMessage.time && lastMessage.sender) {
-      const lastMessageTime = new Date(lastMessage.time).getTime();
-      const currentTime = new Date().getTime();
-      const timeDiff = currentTime - lastMessageTime;
+  if (lastMessage) {
+    const lastTime = lastMessage.time
+      ? new Date(lastMessage.time).getTime()
+      : 0;
 
-      if (
-        lastMessage.sender.toString() === sender &&
-        lastMessage.message === message &&
-        timeDiff < 2000 
-      ) {
-        return existingChat;
-      }
+    const now = Date.now();
+
+    if (
+      lastMessage.sender?.toString() === sender &&
+      lastMessage.message === message &&
+      now - lastTime < 2000
+    ) {
+      return existingChat;
     }
   }
 
+  // ✅ Save message
   const result = await Chat.findOneAndUpdate(
     { orderId: new Types.ObjectId(orderId) },
-    { 
-      $push: { 
-        messages: { 
-          sender: new Types.ObjectId(sender), 
-          senderModel, 
+    {
+      $push: {
+        messages: {
+          sender: new Types.ObjectId(sender),
+          senderModel: normalizedSenderModel,
           message,
-          time: new Date() 
-        } 
-      } 
+          time: new Date(),
+        },
+      },
     },
-    { 
-      returnDocument: 'after',
-      upsert: true, 
-      runValidators: true 
-    }
+    {
+      returnDocument: "after",
+      upsert: true,
+      runValidators: true,
+    },
   ).populate({
-    path: 'messages.sender',
-    select: 'name avatarUrl role'
+    path: "messages.sender",
+    select: "name image avatarUrl role",
   });
 
   return result;
 };
 
-
-
+// -----------------------------
+// GET MESSAGES
+// -----------------------------
 const getMessagesByOrder = async (orderId: string) => {
-  const result = await Chat.findOne({ 
-    orderId: new Types.ObjectId(orderId) 
+  if (!isValidObjectId(orderId)) return null;
+
+  return Chat.findOne({
+    orderId: new Types.ObjectId(orderId),
   }).populate({
-    path: 'messages.sender',
-    select: 'name image role'
+    path: "messages.sender",
+    select: "name image avatarUrl role",
   });
-  
-  return result;
 };
 
 export const ChatService = {
   saveMessage,
-  getMessagesByOrder
+  getMessagesByOrder,
 };

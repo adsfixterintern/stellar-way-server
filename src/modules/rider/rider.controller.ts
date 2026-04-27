@@ -7,29 +7,6 @@ import { Tracking } from "../tracking/tracking.model";
 import { Order } from "../order/order.model";
 
 
-// const applyRider = catchAsync(async (req: Request, res: Response) => {
-
-
-//   const userId = (req as any).user?.id;
-
-//   if (!userId) {
-//     throw new Error("User authentication failed! Token might be missing.");
-//   }
-
-
-//   const result = await RiderServices.applyForRiderIntoDB({
-//     ...req.body,
-//     userId,
-//   });
-
-//   sendResponse(res, {
-//     statusCode: 201,
-//     success: true,
-//     message: "Rider application submitted successfully! Waiting for admin approval.",
-//     data: result,
-//   });
-// });
-
 const applyRider = catchAsync(async (req: Request, res: Response) => {
  
   const userId = req.body.userId 
@@ -160,6 +137,19 @@ const updateRiderRating = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getMyRiderProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId; 
+  const result = await RiderServices.getRiderByUserIdFromDB(userId as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Rider profile retrieved successfully",
+    data: result,
+  });
+});
+
 export const RiderControllers = {
   applyRider,
   approveRider,
@@ -168,5 +158,6 @@ export const RiderControllers = {
   updateRider,
   deleteRider,
   rejectRider,
-  updateRiderRating
+  updateRiderRating,
+  getMyRiderProfile,
 };
