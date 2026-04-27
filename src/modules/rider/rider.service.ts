@@ -150,6 +150,12 @@ const updateRiderRatingInDB = async (
   return result;
 };
 
+const getRiderByUserIdFromDB = async (userId: string) => {
+  const result = await Rider.findOne({ userId }).populate("userId");
+  if (!result) return null;
+  return result;
+};
+
 export const RiderServices = {
   applyForRiderIntoDB,
   approveRiderInDB,
@@ -158,5 +164,6 @@ export const RiderServices = {
   updateRiderInDB,
   deleteRiderFromDB,
   rejectRiderFromDB,
-  updateRiderRatingInDB
+  updateRiderRatingInDB,
+  getRiderByUserIdFromDB,
 };
