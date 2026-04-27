@@ -3,7 +3,6 @@ import { User } from "../user/user.model";
 import mongoose from "mongoose";
 import { Rider } from "./rider.model";
 
-// rider.service.ts
 const applyForRiderIntoDB = async (payload: IRider) => {
   const isUserExists = await User.findById(payload.userId);
   if (!isUserExists) throw new Error('User not found!');
@@ -17,14 +16,15 @@ const applyForRiderIntoDB = async (payload: IRider) => {
   const { status, rating, totalDeliveries, ...cleanData } = payload;
 
   const result = await Rider.create({
-    ...cleanData,
-    status: 'pending' ,
+    ...cleanData, 
+    status: 'pending',
     rating: 0,         
     totalDeliveries: 0 
-  } as any);
+  });
   
   return result;
 };
+
 const approveRiderInDB = async (riderId: string) => {
   const application = await Rider.findById(riderId);
   if (!application) throw new Error("Rider application not found!");

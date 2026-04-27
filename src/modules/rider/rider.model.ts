@@ -16,6 +16,9 @@ const riderSchema = new Schema<IRider>(
       enum: ["bike", "cycle", "car"],
       required: true,
     },
+    licenseNumber: { type: String }, 
+    identityCard: { type: String, required: true },
+    area: { type: String, required: true },
     status: {
       type: String,
       enum: ["pending", "active", "rejected"],
@@ -29,6 +32,7 @@ const riderSchema = new Schema<IRider>(
       lng: { type: Number, default: 0 },
     },
     rating: { type: Number, default: 5.0 },
+    totalDeliveries: { type: Number, default: 0 },
     reviews: [
       {
         userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
