@@ -61,10 +61,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -82,7 +79,6 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 
   const result = await Order.create(finalOrderData);
   const amount = Number(orderData.totalPrice).toFixed(2);
-  // ২. SSLCommerz ডাটা অবজেক্ট
   const data = {
     total_amount: amount,
     currency: "BDT",
@@ -108,9 +104,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     ship_country: "Bangladesh",
   };
 
-  // ৩. SSLCommerz ইনিশিয়ালাইজেশন ফিক্স
-  const isSandbox = process.env.IS_LIVE !== "true"; // IS_LIVE=false হলে true হবে
-
+  const isSandbox = process.env.IS_LIVE !== "true";
   const sslcz = new SSLCommerzPayment(
     process.env.STORE_ID as string,
     process.env.STORE_PASSWORD as string,
@@ -179,10 +173,7 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     statusCode: 201,
     success: true,
     message: "Stripe order initiated successfully!",
-    data: {
-      order: result,
-      paymentUrl: session.url, 
-    },
+    data: { order: result, paymentUrl: session.url },
   });
 });
 
@@ -213,9 +204,7 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     let finalRiderId = orderExists.riderId;
     if (riderId) {
       const riderProfile = await Rider.findOne({ userId: riderId });
-      if (riderProfile) {
-        finalRiderId = riderProfile._id; 
-      }
+      if (riderProfile) finalRiderId = riderProfile._id;
     }
 
     const updatedOrder: any = await Order.findByIdAndUpdate(
@@ -244,12 +233,7 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
           .to(customerId.toString())
           .emit("new-notification", { title, message, status: "unread" });
       }
-
-      socketio.to(id).emit("location-updates", {
-        status,
-        riderName,
-        currentLocation
-      });
+      socketio.to(id).emit("location-updates", { status, riderName, currentLocation });
     }
 
     res.status(200).json({
@@ -363,8 +347,7 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-  // গত ১ বছরের ডাটার জন্য (জানুয়ারি থেকে ডিসেম্বর চার্টের জন্য)
-  const oneYearAgo = new Date(now.getFullYear(), 0, 1); // বর্তমান বছরের ১লা জানুয়ারি থেকে
+  const oneYearAgo = new Date(now.getFullYear(), 0, 1);
 
   const stats = await Order.aggregate([
     {
@@ -478,7 +461,7 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   const result = await Order.findOneAndUpdate(
     { transactionId: transactionId as string } as any,
     { paymentStatus: "failed" },
-    { new: true }
+    { new: true },
   );
   if (!result) {
     return res.redirect(
@@ -514,14 +497,16 @@ export const getRiderStatsAndOrders = async (
     }
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
 
     const riderProfile = await Rider.findOne({ userId: user._id });
-    if (!riderProfile) {
-      return res.status(404).json({ success: false, message: "Rider profile not found" });
-    }
+    if (!riderProfile)
+      return res
+        .status(404)
+        .json({ success: false, message: "Rider profile not found" });
 
     const riderProfileId = riderProfile._id;
 
