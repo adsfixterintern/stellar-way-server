@@ -13,7 +13,7 @@ router.post(
   authorizeRoles("admin", "user", "chef", "rider"),
   FeedbackControllers.createFeedback,
 );
-router.get("/all-feedback",isAuthenticated,authorizeRoles('admin','user','chef','rider'), FeedbackControllers.getAllFeedbacks);
+router.get("/all-feedback", FeedbackControllers.getAllFeedbacks);
 router.patch("/:id",isAuthenticated,authorizeRoles('admin','user'), FeedbackControllers.updateFeedback);
 
 router.get("/my-feedbacks", isAuthenticated, FeedbackControllers.getMyFeedbacks);
