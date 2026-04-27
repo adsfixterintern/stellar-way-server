@@ -122,24 +122,59 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 
 // user.controller.ts
 
-const updateProfile = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.body;
+// const updateProfile = catchAsync(async (req: Request, res: Response) => {
+//   const { userId } = req.body;
 
+//   if (req.file) {
+//     const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
+//     if (uploadResult) {
+//       req.body.image = uploadResult.url; 
+//     }
+//   }
+
+//   const updateData = { ...req.body };
+//   delete updateData.userId;
+
+//   if (Object.keys(updateData).length === 0 && !req.file) {
+//     throw new Error("Please provide data to update your profile.");
+//   }
+
+//   const result = await UserService.updateProfileInDB(userId, updateData);
+
+//   sendResponse(res, {
+//     statusCode: 200,
+//     success: true,
+//     message: "Profile updated successfully",
+//     data: result,
+//   });
+// });
+
+
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const { userId, ...updateData } = req.body;
+
+  // যদি ফ্রন্টএন্ড থেকে userId না আসে, তবে টোকেন থেকে নিন (Security-র জন্য ভালো)
+  const targetId = userId || (req as any).user?._id;
+
+  if (!targetId) {
+    throw new Error("User ID is required to update profile.");
+  }
+
+  // যদি ফাইল (Multer) এর মাধ্যমে আসে তবে সেটা প্রসেস হবে
+  // আর যদি সরাসরি body.image-এ Base64 আসে তবে সেটা updateData-তেই থাকবে
   if (req.file) {
     const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
     if (uploadResult) {
-      req.body.image = uploadResult.url; 
+      updateData.image = uploadResult.url; 
     }
   }
 
-  const updateData = { ...req.body };
-  delete updateData.userId;
-
-  if (Object.keys(updateData).length === 0 && !req.file) {
+  // যদি কোন ডাটাই না থাকে
+  if (Object.keys(updateData).length === 0) {
     throw new Error("Please provide data to update your profile.");
   }
 
-  const result = await UserService.updateProfileInDB(userId, updateData);
+  const result = await UserService.updateProfileInDB(targetId, updateData);
 
   sendResponse(res, {
     statusCode: 200,
