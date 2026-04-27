@@ -7,13 +7,17 @@ import Stripe from "stripe";
 import { sendEmail } from "../../app/utils/sendEmail";
 import { io } from "../../app/utils/socket";
 import { Notification } from "../notification/notification.model";
-import { model } from "mongoose";
 import { Rider } from "../rider/rider.model";
 import { User } from "../user/user.model";
 import config from "../../app/config";
 import { Menu } from "../menu/menu.model";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
+<<<<<<< HEAD
+// ─── সব আগের function হুবহু একই আছে ─────────────────────────────────────────
+
+=======
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -45,6 +49,17 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userEmail = req.params.email as string;
+<<<<<<< HEAD
+    const orders = await Order.find({
+      "customerInfo.email": userEmail,
+    } as any)
+      .populate({
+        path: "riderId",
+        select: "lastLocation userId phoneNumber status",
+        populate: {
+          path: "userId",
+          select: "name image",
+=======
 
     const orders = await Order.find({
       "customerInfo.email": userEmail,
@@ -64,10 +79,16 @@ export const getMyOrders = async (req: Request, res: Response) => {
         path: "riderId",
         populate: {
           path: "userId",
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
         },
       })
       .sort({ createdAt: -1 });
 
+<<<<<<< HEAD
+    res.status(200).json({ success: true, data: orders });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+=======
     return res.status(200).json({
       success: true,
       data: orders,
@@ -77,6 +98,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
       success: false,
       message: error.message,
     });
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   }
 };
 
@@ -90,14 +112,19 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     paymentStatus: "unpaid",
   };
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   if (!finalOrderData.orderId) delete (finalOrderData as any).orderId;
 
   const result = await Order.create(finalOrderData);
-
   const amount = Number(orderData.totalPrice).toFixed(2);
 
+<<<<<<< HEAD
+=======
   // ২. SSLCommerz ডাটা অবজেক্ট
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   const data = {
     total_amount: amount,
     currency: "BDT",
@@ -123,9 +150,13 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     ship_country: "Bangladesh",
   };
 
+<<<<<<< HEAD
+  const isSandbox = process.env.IS_LIVE !== "true";
+=======
   // ৩. SSLCommerz ইনিশিয়ালাইজেশন ফিক্স
   const isSandbox = process.env.IS_LIVE !== "true"; 
 
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   const sslcz = new SSLCommerzPayment(
     process.env.STORE_ID as string,
     process.env.STORE_PASSWORD as string,
@@ -134,7 +165,6 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 
   try {
     const apiResponse = await sslcz.init(data);
-
     if (apiResponse?.GatewayPageURL) {
       sendResponse(res, {
         statusCode: 201,
@@ -157,6 +187,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     });
   }
 });
+
 const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
   const orderData = req.body;
   const transactionId = `STXP-${Date.now()}`;
@@ -170,15 +201,12 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
 
   const result = await Order.create(finalOrderData);
 
-  // ২. Stripe Checkout Session তৈরি করা
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: orderData.items.map((item: any) => ({
       price_data: {
         currency: "usd",
-        product_data: {
-          name: "Savory Nest Food Order",
-        },
+        product_data: { name: "Savory Nest Food Order" },
         unit_amount: Math.round(orderData.totalPrice * 100),
       },
       quantity: 1,
@@ -197,10 +225,14 @@ const createStripeOrder = catchAsync(async (req: Request, res: Response) => {
     statusCode: 201,
     success: true,
     message: "Stripe order initiated successfully!",
+<<<<<<< HEAD
+    data: { order: result, paymentUrl: session.url },
+=======
     data: {
       order: result,
       paymentUrl: session.url,
     },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   });
 });
 
@@ -229,26 +261,41 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     }
 
     let finalRiderId = orderExists.riderId;
+<<<<<<< HEAD
+    if (riderId) {
+      const riderProfile = await Rider.findOne({ userId: riderId });
+      if (riderProfile) finalRiderId = riderProfile._id;
+=======
 
     if (riderId) {
       const riderProfile = await Rider.findOne({ userId: riderId });
       if (riderProfile) {
         finalRiderId = riderProfile._id;
       }
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     }
 
     const updatedOrder: any = await Order.findByIdAndUpdate(
       id,
+<<<<<<< HEAD
+      { deliveryStatus: status, riderId: finalRiderId },
+=======
       {
         deliveryStatus: status,
         riderId: finalRiderId,
       },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
       { new: true },
     ).populate("customerInfo.user");
 
     const socketio = req.app.get("socketio");
     const customerId =
+<<<<<<< HEAD
+      updatedOrder.customerInfo?.user?._id ||
+      updatedOrder.customerInfo?.user;
+=======
       updatedOrder.customerInfo?.user?._id || updatedOrder.customerInfo?.user;
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
     if (socketio) {
       if (customerId) {
@@ -261,17 +308,24 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
           title = "Order Received! 🎉";
           message = "Your delivery is complete. Enjoy!";
         }
+<<<<<<< HEAD
+=======
 
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
         socketio
           .to(customerId.toString())
           .emit("new-notification", { title, message, status: "unread" });
       }
+<<<<<<< HEAD
+      socketio.to(id).emit("location-updates", { status, riderName, currentLocation });
+=======
 
       socketio.to(id).emit("location-updates", {
         status,
         riderName,
         currentLocation,
       });
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     }
 
     res.status(200).json({
@@ -287,13 +341,11 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
 const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
-
   const result = await Order.findByIdAndUpdate(
     id,
     { paymentStatus: status },
     { new: true, runValidators: true },
   );
-
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -305,7 +357,6 @@ const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
 const getOrderDetails = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await Order.findById(id).populate("items.menuId");
-
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -340,6 +391,10 @@ const updatePaymentStatusByTransactionId = catchAsync(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+<<<<<<< HEAD
+
+    if (status === "paid") {
+=======
 
     if (status === "paid" && result.items && result.items.length > 0) {
       try {
@@ -358,6 +413,7 @@ const updatePaymentStatusByTransactionId = catchAsync(
         console.error("Stock update failed:", stockError);
       }
 
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
       const notifTitle = "Order Confirmed! 🎉";
       const notifMessage = `Payment successful for Order #${result.transactionId.slice(-6)}. OTP: ${otp}.`;
 
@@ -400,19 +456,25 @@ const updatePaymentStatusByTransactionId = catchAsync(
   },
 );
 
+<<<<<<< HEAD
+=======
 // admin dashboard
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+<<<<<<< HEAD
+  const oneYearAgo = new Date(now.getFullYear(), 0, 1);
+=======
 
   // গত ১ বছরের ডাটার জন্য (জানুয়ারি থেকে ডিসেম্বর চার্টের জন্য)
   const oneYearAgo = new Date(now.getFullYear(), 0, 1); // বর্তমান বছরের ১লা জানুয়ারি থেকে
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
   const stats = await Order.aggregate([
     {
       $facet: {
-        // ১. আপনার আগের বর্তমান টোটাল
         currentTotals: [
           {
             $group: {
@@ -430,12 +492,17 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
                 },
               },
               totalPendingOrders: {
+<<<<<<< HEAD
+                $sum: {
+                  $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0],
+                },
+=======
                 $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
               },
             },
           },
         ],
-        // ২. আপনার আগের ট্রেন্ড ক্যালকুলেশন ডাটা
         last30Days: [
           {
             $match: {
@@ -466,10 +533,16 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
             },
           },
         ],
-        // --- ৩. নতুন অংশ: মান্থলি চার্টের জন্য ডাটা ---
         monthlyOverview: [
           {
+<<<<<<< HEAD
+            $match: {
+              createdAt: { $gte: oneYearAgo },
+              paymentStatus: "paid",
+            },
+=======
             $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" },
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
           },
           {
             $group: {
@@ -492,6 +565,11 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const lastMonth = stats[0].last30Days[0] || { revenue: 0, count: 0 };
   const prevMonth = stats[0].prev30Days[0] || { revenue: 0, count: 0 };
 
+<<<<<<< HEAD
+  const monthNames = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec",
+=======
   // মাসের নাম ম্যাপ করার জন্য
   const monthNames = [
     "Jan",
@@ -506,6 +584,7 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
     "Oct",
     "Nov",
     "Dec",
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   ];
   const salesChartData = stats[0].monthlyOverview.map((item: any) => ({
     name: monthNames[item._id.month - 1],
@@ -538,32 +617,49 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
 
 const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.params;
-
   const result = await Order.findOneAndUpdate(
     { transactionId: transactionId as string } as any,
     { paymentStatus: "failed" },
     { new: true },
   );
-
   if (!result) {
     return res.redirect(
+<<<<<<< HEAD
+      `${process.env.CLIENT_URL || config.clientUrl}/payment/fail`,
+    );
+  }
+  res.redirect(
+    `${process.env.CLIENT_URL || config.clientUrl}/payment/fail?tranId=${transactionId}`,
+=======
       `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`,
     );
   }
 
   res.redirect(
     `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`,
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
   );
 });
 
 const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.params;
-
   await Order.findOneAndUpdate(
     { transactionId: transactionId as string } as any,
     { paymentStatus: "cancelled" },
   );
   res.redirect(
+<<<<<<< HEAD
+    `${process.env.CLIENT_URL || config.clientUrl}/payment/cancel`,
+  );
+});
+
+export const getRiderStatsAndOrders = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const { email } = req.params;
+=======
     `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`,
   );
 });
@@ -572,6 +668,7 @@ export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
   try {
     const { email } = req.params;
 
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
     if (!email || typeof email !== "string") {
       return res
         .status(400)
@@ -579,6 +676,18 @@ export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({ email });
+<<<<<<< HEAD
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    const riderProfile = await Rider.findOne({ userId: user._id });
+    if (!riderProfile)
+      return res
+        .status(404)
+        .json({ success: false, message: "Rider profile not found" });
+=======
     if (!user) {
       return res
         .status(404)
@@ -591,6 +700,7 @@ export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: "Rider profile not found" });
     }
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
 
     const riderProfileId = riderProfile._id;
 
@@ -630,6 +740,181 @@ export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── ✅ CHANGED: getFilteredOrderStats — "all" period add করা হয়েছে ──────────
+export const getFilteredOrderStats = catchAsync(
+  async (req: Request, res: Response) => {
+    const period = req.query.period as string;
+    const monthParam = req.query.month;
+    const now = new Date();
+
+    let startDate: Date;
+    let endDate: Date;
+
+    // ✅ CHANGED: "all" case add করা হয়েছে — সব paid orders দেখাবে
+    if (period === "all") {
+      startDate = new Date(0);   // 1970 থেকে শুরু — মানে সব data
+      endDate = new Date();      // এখন পর্যন্ত
+
+    } else if (period === "day") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    } else if (period === "week") {
+      const dayOfWeek = now.getDay();
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - dayOfWeek), 23, 59, 59, 999);
+
+    } else if (period === "month") {
+      const monthIdx = monthParam !== undefined ? parseInt(monthParam as string) : now.getMonth();
+      startDate = new Date(now.getFullYear(), monthIdx, 1, 0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), monthIdx + 1, 0, 23, 59, 59, 999);
+
+    } else {
+      return res.status(400).json({
+        success: false,
+        // ✅ CHANGED: error message-এ "all" add করা হয়েছে
+        message: "Invalid period. Use: all | day | week | month",
+      });
+    }
+
+    // total revenue & orders aggregate
+    const result = await Order.aggregate([
+      {
+        $match: {
+          paymentStatus: "paid",
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalPrice" },
+          totalOrders: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // chart data breakdown
+    let chartData: any[] = [];
+
+    // ✅ CHANGED: "all" period-এ মাস অনুযায়ী chart data দেখাবে
+    if (period === "all") {
+      const monthly = await Order.aggregate([
+        { $match: { paymentStatus: "paid" } },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+            },
+            revenue: { $sum: "$totalPrice" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
+      ]);
+
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      chartData = monthly.map((item: any) => ({
+        // year দেখাবো যদি multiple years থাকে
+        name: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+        revenue: item.revenue,
+        orders: item.orders,
+      }));
+
+    } else if (period === "day") {
+      const hourly = await Order.aggregate([
+        { $match: { paymentStatus: "paid", createdAt: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: { hour: { $hour: "$createdAt" } },
+            revenue: { $sum: "$totalPrice" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.hour": 1 } },
+      ]);
+
+      chartData = Array.from({ length: 24 }, (_, hour) => {
+        const found = hourly.find((h: any) => h._id.hour === hour);
+        return {
+          name: `${hour}:00`,
+          revenue: found?.revenue ?? 0,
+          orders: found?.orders ?? 0,
+        };
+      });
+
+    } else if (period === "week") {
+      const daily = await Order.aggregate([
+        { $match: { paymentStatus: "paid", createdAt: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: { dayOfWeek: { $dayOfWeek: "$createdAt" } },
+            revenue: { $sum: "$totalPrice" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.dayOfWeek": 1 } },
+      ]);
+
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      chartData = dayNames.map((dayName, idx) => {
+        const found = daily.find((d: any) => d._id.dayOfWeek === idx + 1);
+        return {
+          name: dayName,
+          revenue: found?.revenue ?? 0,
+          orders: found?.orders ?? 0,
+        };
+      });
+
+    } else if (period === "month") {
+      const daily = await Order.aggregate([
+        { $match: { paymentStatus: "paid", createdAt: { $gte: startDate, $lte: endDate } } },
+        {
+          $group: {
+            _id: { day: { $dayOfMonth: "$createdAt" } },
+            revenue: { $sum: "$totalPrice" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.day": 1 } },
+      ]);
+
+      const daysInMonth = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        0,
+      ).getDate();
+      chartData = Array.from({ length: daysInMonth }, (_, idx) => {
+        const day = idx + 1;
+        const found = daily.find((d: any) => d._id.day === day);
+        return {
+          name: `${day}`,
+          revenue: found?.revenue ?? 0,
+          orders: found?.orders ?? 0,
+        };
+      });
+    }
+
+    const summary = result[0] ?? { totalRevenue: 0, totalOrders: 0 };
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Filtered order stats fetched successfully!",
+      data: {
+        period,
+        startDate,
+        endDate,
+        totalRevenue: summary.totalRevenue,
+        totalOrders: summary.totalOrders,
+        chartData,
+      },
+    });
+  },
+);
+
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -643,4 +928,8 @@ export const OrderControllers = {
   paymentFailed,
   paymentCancelled,
   getRiderStatsAndOrders,
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b8addae764c15226b5eb4a0736e2596cd2e7c4b2
