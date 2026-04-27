@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
 export interface IEventBooking {
   userId: Types.ObjectId;
@@ -6,10 +6,11 @@ export interface IEventBooking {
   numberOfSeats: number;
   totalAmount: number;
   transactionId: string;
-  paymentStatus: 'pending' | 'paid' | 'cancelled';
-  paymentMethod: 'SSLCommerz' | 'Stripe';
+  paymentStatus: "pending" | "paid" | "cancelled";
+  paymentMethod: "SSLCommerz" | "Stripe";
   phone: string;
-  selectedDate: string; 
+  qrCode: string;
+  selectedDate: string;
   selectedTime: string;
   bookingDate: Date;
 }

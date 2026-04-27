@@ -11,7 +11,7 @@ router.get('/', MenuController.getAllMenus);
 // admin
 router.get('/low-stock',isAuthenticated,authorizeRoles('admin'), MenuController.getLowStockMenus);
 router.get('/:id', MenuController.getSingleMenu); 
-router.patch('/:id',upload.single('image'),isAuthenticated,authorizeRoles('admin'), MenuController.updateMenu);  
+router.patch('/:id',upload.single('image'),isAuthenticated,authorizeRoles('admin','user','chef'), MenuController.updateMenu);  
 router.delete('/:id',isAuthenticated,authorizeRoles('admin'), MenuController.deleteMenu); 
 
 

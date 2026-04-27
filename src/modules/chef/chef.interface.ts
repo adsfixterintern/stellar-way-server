@@ -1,3 +1,14 @@
+import { Types } from 'mongoose';
+
+export interface IReview {
+  rating: number;
+  comment?: string;
+  userId: Types.ObjectId;
+  menuId: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface IChef {
   name: string;
   image: string;
@@ -6,4 +17,5 @@ export interface IChef {
   speciality: string;
   rating: number;
   status: 'active' | 'inactive' | 'suspended';
+  reviews?: IReview[]; // ✅ শুধু এটা add করুন
 }

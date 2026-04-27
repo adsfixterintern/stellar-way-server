@@ -1,3 +1,4 @@
+import { Chef } from "../chef/chef.model";
 import { UploadService } from "../upload/upload.service";
 import { IMenu } from "./menu.interface";
 import { Menu } from "./menu.model";
@@ -79,25 +80,53 @@ const updateMenuInDB = async (id: string, payload: any) => {
   let updateQuery = {};
 
   if (payload.rating || payload.review) {
+    const reviewData = {
+      rating: Number(payload.rating),
+      comment: payload.review,
+      userId: payload.userId,
+    };
+
+    // ✅ Menu তে review push করুন
     updateQuery = {
       $push: {
-        reviews: {
-          rating: Number(payload.rating),
-          comment: payload.review,
-          userId: payload.userId,
-        },
+        reviews: reviewData,
       },
     };
+
+    const updatedMenu = await Menu.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+      runValidators: true,
+    });
+
+   
+
+    // ✅ সেই Menu এর chefId বের করে Chef এও review push করুন
+    if (updatedMenu?.chefId) {
+      await Chef.findByIdAndUpdate(
+        updatedMenu.chefId,
+        {
+          $push: {
+            reviews: {
+              ...reviewData,
+              menuId: id, // কোন menu থেকে review এসেছে সেটা track করতে
+            },
+          },
+        },
+        { new: true }
+      );
+    }
+
+    return updatedMenu;
   } else {
     updateQuery = { $set: payload };
+
+    const result = await Menu.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+      runValidators: true,
+    });
+
+    return result;
   }
-
-  const result = await Menu.findByIdAndUpdate(id, updateQuery, {
-    new: true,
-    runValidators: true,
-  });
-
-  return result;
 };
 
 const deleteMenuFromDB = async (id: string) => {
@@ -116,7 +145,7 @@ const getLowStockMenusFromDB = async () => {
   // $lt: 5 মানে stock ৫ এর নিচে হতে হবে
   const result = await Menu.find({ stock: { $lt: 5 } })
     .populate('categoryId')
-    .sort({ stock: 1 }); // সবচেয়ে কমগুলো আগে দেখাবে
+    .sort({ stock: 1 }); 
     
   return result;
 };

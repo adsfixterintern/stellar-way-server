@@ -24,6 +24,12 @@ import { EventRoutes } from "../../modules/event/event.route";
 
 import { EventBookingRoutes } from "../../modules/event-booking/eventBooking.route";
 import { AnalyticsRoutes } from "../../modules/analytics/analytics.route";
+import { TableRoutes } from "../../modules/table/table.route";
+import { RestaurantStatsRoutes } from "../../modules/restaurantStats/restaurantStats.route";
+import { OwnerMessageRoutes } from "../../modules/ownerMessage/ownerMessage.route";
+import { ContactRoutes } from "../../modules/contact/contact.route";
+import { OfferRoutes } from "../../modules/offer/offer.route";
+
 const router = Router();
 
 const moduleRoutes = [
@@ -72,9 +78,20 @@ const moduleRoutes = [
   { path: "/chats", route: ChatRoutes },
   { path: "/tracking", route: TrackingRoutes },
   { path: "/blogs", route: BlogRoutes },
-  { 
-    path: "/analytics", 
-    route: AnalyticsRoutes 
+  {
+    path: "/analytics",
+    route: AnalyticsRoutes,
+  },
+  { path: "/table", route: TableRoutes },
+  { path: "/stats", route: RestaurantStatsRoutes },
+  { path: "/owner-message", route: OwnerMessageRoutes },
+  {
+    path: "/contact",
+    route: ContactRoutes,
+  },
+  {
+    path: "/offer",
+    route: OfferRoutes,
   },
 ];
 

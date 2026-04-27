@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
 export interface IEvent {
   title: string;
@@ -7,7 +7,8 @@ export interface IEvent {
   time: string;
   image: string;
   seat: number;
+  availableSeat: number;
   price: number;
-  status: 'active' | 'expired';
-  featured: boolean; 
+  status: "active" | "expired";
+  featured: boolean;
 }

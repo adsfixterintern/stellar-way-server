@@ -165,6 +165,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await UserService.deleteUserFromDB(id as any);
@@ -193,6 +194,21 @@ const updateUserRole = catchAsync(async (req: Request, res: Response) => {
     data: user,
   });
 });
+
+const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body; 
+
+  const result = await UserService.updateUserStatusInDB(id as string, status);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `User ${status === 'blocked' ? 'blocked' : 'unblocked'} successfully`,
+    data: result,
+  });
+});
+
 export const UserController = {
   registerUser,
   loginUser,
@@ -205,5 +221,6 @@ export const UserController = {
   getMe,
   getAllUsers ,
   deleteUser,
-  updateUserRole
+  updateUserRole,
+  updateUserStatus
 };

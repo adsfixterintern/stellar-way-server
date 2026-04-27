@@ -62,4 +62,12 @@ router.patch(
 
 router.get('/me', UserController.getMe);
 
+
+router.patch(
+  "/users/update-status/:id", 
+  isAuthenticated,
+  authorizeRoles("admin"),
+  UserController.updateUserStatus
+);
+
 export const UserRoutes = router;

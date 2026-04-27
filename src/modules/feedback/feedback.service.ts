@@ -9,29 +9,43 @@ const createFeedbackIntoDB = async (payload: ITestimonial) => {
 
 // get testimonial whit pagination (3)
 const getAllFeedbacksFromDB = async (query: Record<string, unknown>) => {
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 3;
-    const skip = (page - 1) * limit;
-  const result = await Testimonial.find()
-    // .populate('userId')
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 }); 
-  const total = await Testimonial.countDocuments();
-  const totalPage = Math.ceil(total / limit);
+  const { status, page = 1, limit = 3 } = query;
+  const filter = status ? { status } : {}; 
 
-  return {
-    meta: {
-      page,
-      limit,
-      total,
-      totalPage,
-    },
-    result,
-  };
+  const skip = (Number(page) - 1) * Number(limit);
+  
+  const result = await Testimonial.find(filter)
+    .populate('userId') 
+    .skip(skip)
+    .limit(Number(limit))
+    .sort({ createdAt: -1 });
+
+  return { result, total: await Testimonial.countDocuments(filter) };
+};
+const updateFeedbackStatusIntoDB = async (id: string, payload: Partial<ITestimonial>) => {
+  const result = await Testimonial.findByIdAndUpdate(id, payload, { 
+    new: true, 
+    runValidators: true 
+  });
+  return result;
+};
+
+const getMyFeedbacksFromDB = async (userId: string) => {
+  const result = await Testimonial.find({ userId })
+    .populate('userId')
+    .sort({ createdAt: -1 });
+  return result;
+};
+
+const deleteFeedbackFromDB = async (id: string) => {
+  const result = await Testimonial.findByIdAndDelete(id);
+  return result;
 };
 
 export const FeedbackServices = {
   createFeedbackIntoDB,
   getAllFeedbacksFromDB,
+  updateFeedbackStatusIntoDB,
+  getMyFeedbacksFromDB,
+ deleteFeedbackFromDB
 };

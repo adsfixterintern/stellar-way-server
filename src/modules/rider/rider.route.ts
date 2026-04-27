@@ -25,7 +25,7 @@ router.patch("/reject-rider/:id",isAuthenticated,authorizeRoles('admin'), RiderC
 router.get(
   "/",
   isAuthenticated,
-  authorizeRoles('admin'),
+  authorizeRoles('admin', 'rider'),
   RiderControllers.getAllRiders,
 );
 
@@ -46,5 +46,6 @@ router.delete(
   RiderControllers.deleteRider,
 );
 
+router.get("/my-profile/:userId", isAuthenticated, RiderControllers.getMyRiderProfile);
 
 export const RiderRoutes = router;

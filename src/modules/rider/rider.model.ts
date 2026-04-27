@@ -1,56 +1,47 @@
-import { Schema, model, models, Model } from 'mongoose';
-import { IRider } from './rider.interface';
+// modules/rider/rider.model.ts
+import { Schema, model, models, Model } from "mongoose";
+import { IRider } from "./rider.interface";
 
-const riderSchema = new Schema<IRider>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-  phoneNumber: { type: String, required: true, unique: true },
-  vehicleType: { type: String, enum: ['bike', 'cycle', 'car'], required: true },
-  licenseNumber: { type: String },
-  identityCard: { type: String, required: true },
-  area: { type: String, required: true },
-  
-  status: { 
-    type: String, 
-    enum: ['pending', 'active', 'rejected'], 
-    default: 'pending',
-    lowercase: true,
-    trim: true
+const riderSchema = new Schema<IRider>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    phoneNumber: { type: String, required: true, unique: true },
+    vehicleType: {
+      type: String,
+      enum: ["bike", "cycle", "car"],
+      required: true,
+    },
+    licenseNumber: { type: String }, 
+    identityCard: { type: String, required: true },
+    area: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["pending", "active", "rejected"],
+      default: "pending",
+      lowercase: true,
+      trim: true,
+    },
+    isOnline: { type: Boolean, default: false },
+    lastLocation: {
+      lat: { type: Number, default: 0 },
+      lng: { type: Number, default: 0 },
+    },
+    rating: { type: Number, default: 5.0 },
+    totalDeliveries: { type: Number, default: 0 },
+    reviews: [
+      {
+        userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        rating: { type: Number, required: true },
+        comment: { type: String },
+      },
+    ],
   },
+  { timestamps: true },
+);
 
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
-  lastLocation: {
-    lat: { type: Number, default: 0 },
-    lng: { type: Number, default: 0 }
-  },
-
-  // গড় রেটিং (Average Rating)
-  rating: { 
-    type: Number, 
-    default: 5.0
-  },
-  
-  totalDeliveries: { 
-    type: Number, 
-    default: 0 
-  },
-
-  isBusy: {
-    type: Boolean,
-    default: false
-  },
-  reviews: [
-    {
-      userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-      rating: { type: Number, required: true, min: 1, max: 5 },
-      comment: { type: String, trim: true },
-      createdAt: { type: Date, default: Date.now }
-    }
-  ]
-}, { timestamps: true });
-
-riderSchema.index({ area: 1, isOnline: 1, isBusy: 1 });
-
-export const Rider = (models.RiderModel as Model<IRider>) || model<IRider>('Rider', riderSchema);
+export const Rider = models.Rider || model<IRider>("Rider", riderSchema);

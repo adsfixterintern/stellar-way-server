@@ -40,7 +40,7 @@ const loginUserFromDB = async (payload: Pick<IUser, "email" | "password">) => {
   }
 
   if (user.status === "blocked") {
-    throw new Error("This user is blocked!");
+    throw new Error("Your account has been blocked by the admin. Please contact support.");
   }
 
   // password check kora
@@ -203,25 +203,40 @@ const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
   return result;
 };
 
-const getAllUsersFromDB = async (query: Record<string, unknown>) => {
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10;
-  const skip = (page - 1) * limit;
 
- 
-  const result = await User.find()
+const getAllUsersFromDB = async (query: Record<string, unknown>) => {
+  const { searchTerm, role, page, limit } = query;
+
+  const pageNumber = Number(page) || 1;
+  const limitNumber = Number(limit) || 10;
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const filter: any = {};
+
+  if (searchTerm) {
+    filter.$or = [
+      { name: { $regex: searchTerm, $options: "i" } },
+      { email: { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
+  if (role) {
+    filter.role = role;
+  }
+
+  const result = await User.find(filter)
     .skip(skip)
-    .limit(limit)
+    .limit(limitNumber)
     .sort({ createdAt: -1 });
 
-  const total = await User.countDocuments();
+  const total = await User.countDocuments(filter);
 
   return {
     meta: {
-      page,
-      limit,
+      page: pageNumber,
+      limit: limitNumber,
       total,
-      totalPage: Math.ceil(total / limit),
+      totalPage: Math.ceil(total / limitNumber),
     },
     data: result,
   };
@@ -241,6 +256,22 @@ const deleteUserFromDB = async (userId: string) => {
   return result;
 };
 
+
+const updateUserStatusInDB = async (userId: string, status: 'active' | 'blocked') => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { status },
+    { new: true, runValidators: true }
+  );
+
+  return result;
+};
+
 export const UserService = {
   registerUserIntoDB,
   loginUserFromDB,
@@ -250,6 +281,6 @@ export const UserService = {
   updateProfileInDB,
   getMeFromDB,
   getAllUsersFromDB,
-  deleteUserFromDB 
-
+  deleteUserFromDB,
+  updateUserStatusInDB
 };
