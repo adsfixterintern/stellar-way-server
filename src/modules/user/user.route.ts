@@ -22,7 +22,7 @@ router.patch(
   '/update-profile',
   isAuthenticated,
   authorizeRoles('user', 'admin', 'rider'),
-  upload.single('file'), 
+  upload.single('image'), 
   UserController.updateProfile
 );
 
