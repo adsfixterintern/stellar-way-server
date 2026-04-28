@@ -25,7 +25,7 @@ const updateLiveLocation = async (payload: Partial<ITracking>) => {
         riderId: toObjectId(riderId),
       },
     },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: 'after' },
   ).populate("riderId");
 
   if (status === "delivered") {

@@ -12,7 +12,7 @@ const trackVisitIntoDB = async (source: TSource) => {
   const result = await Traffic.findOneAndUpdate(
     { source, date: today } as any, // 'as any' অথবা 'as FilterQuery<ITrafficSource>' দিলে এরর চলে যাবে
     { $inc: { count: 1 } },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
   return result;
 };

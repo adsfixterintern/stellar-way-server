@@ -196,7 +196,7 @@ const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
   const { email, password, role, ...updateData } = payload;
 
   const result = await User.findByIdAndUpdate(userId, updateData, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 
@@ -266,7 +266,7 @@ const updateUserStatusInDB = async (userId: string, status: 'active' | 'blocked'
   const result = await User.findByIdAndUpdate(
     userId,
     { status },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
 
   return result;
