@@ -46,33 +46,20 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userEmail = req.params.email as string;
-
     const orders = await Order.find({
       "customerInfo.email": userEmail,
-    })
-      // 👤 full customer user object
-      .populate({
-        path: "customerInfo.user",
-      })
-
-      // 🍔 full menu object
-      .populate({
-        path: "items.menuId",
-      })
-
-      // 🚴 full rider + full rider user
+    } as any)
       .populate({
         path: "riderId",
+        select: "lastLocation userId phoneNumber status",
         populate: {
           path: "userId",
+          select: "name image",
         },
       })
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({
-      success: true,
-      data: orders,
-    });
+    res.status(200).json({ success: true, data: orders });
   } catch (error: any) {
     res.status(500).json({ 
       success: false, 
@@ -224,7 +211,6 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
     }
 
     let finalRiderId = orderExists.riderId;
-
     if (riderId) {
       const riderProfile = await Rider.findOne({ userId: riderId });
       if (riderProfile) {
@@ -234,16 +220,14 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
 
     const updatedOrder: any = await Order.findByIdAndUpdate(
       id,
-      {
-        deliveryStatus: status,
-        riderId: finalRiderId,
-      },
+      { deliveryStatus: status, riderId: finalRiderId },
       { new: true },
     ).populate("customerInfo.user");
 
     const socketio = req.app.get("socketio");
     const customerId =
-      updatedOrder.customerInfo?.user?._id || updatedOrder.customerInfo?.user;
+      updatedOrder.customerInfo?.user?._id ||
+      updatedOrder.customerInfo?.user;
 
     if (socketio) {
       if (customerId) {
@@ -332,23 +316,7 @@ const updatePaymentStatusByTransactionId = catchAsync(
         .status(404)
         .json({ success: false, message: "Order not found" });
 
-    if (status === "paid" && result.items && result.items.length > 0) {
-      try {
-        const stockUpdates = result.items.map((item: any) => {
-          return {
-            updateOne: {
-              filter: { _id: item.menuId },
-              update: { $inc: { stock: -item.quantity } }, 
-            },
-          };
-        });
-
-
-        await Menu.bulkWrite(stockUpdates);
-      } catch (stockError) {
-        console.error("Stock update failed:", stockError);
-      }
-
+    if (status === "paid") {
       const notifTitle = "Order Confirmed! 🎉";
       const notifMessage = `Payment successful for Order #${result.transactionId.slice(-6)}. OTP: ${otp}.`;
 
@@ -391,7 +359,6 @@ const updatePaymentStatusByTransactionId = catchAsync(
   },
 );
 
-// admin dashboard
 const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -419,7 +386,9 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
                 },
               },
               totalPendingOrders: {
-                $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] },
+                $sum: {
+                  $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0],
+                },
               },
             },
           },
@@ -443,10 +412,12 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
           { $match: { createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }, paymentStatus: "paid" } },
           { $group: { _id: null, revenue: { $sum: "$totalPrice" }, count: { $sum: 1 } } },
         ],
-        // --- ৩. নতুন অংশ: মান্থলি চার্টের জন্য ডাটা ---
         monthlyOverview: [
           {
-            $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" },
+            $match: {
+              createdAt: { $gte: oneYearAgo },
+              paymentStatus: "paid",
+            },
           },
           {
             $group: {
@@ -469,20 +440,9 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const lastMonth = stats[0].last30Days[0] || { revenue: 0, count: 0 };
   const prevMonth = stats[0].prev30Days[0] || { revenue: 0, count: 0 };
 
-  // মাসের নাম ম্যাপ করার জন্য
   const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec",
   ];
   const salesChartData = stats[0].monthlyOverview.map((item: any) => ({
     name: monthNames[item._id.month - 1],
@@ -522,12 +482,11 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   );
   if (!result) {
     return res.redirect(
-      `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`,
+      `${process.env.CLIENT_URL || config.clientUrl}/payment/fail`,
     );
   }
-
   res.redirect(
-    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`,
+    `${process.env.CLIENT_URL || config.clientUrl}/payment/fail?tranId=${transactionId}`,
   );
 });
 
@@ -538,14 +497,16 @@ const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
     { paymentStatus: "cancelled" },
   );
   res.redirect(
-    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`,
+    `${process.env.CLIENT_URL || config.clientUrl}/payment/cancel`,
   );
 });
 
-export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
+export const getRiderStatsAndOrders = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const { email } = req.params;
-
     if (!email || typeof email !== "string") {
       return res
         .status(400)
