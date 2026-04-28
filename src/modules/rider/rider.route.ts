@@ -2,6 +2,7 @@ import { Router } from "express";
 import { RiderControllers } from "./rider.controller";
 import { isAuthenticated } from "../../app/middlewares/auth.middleware";
 import { authorizeRoles } from "../../app/middlewares/authorization.middleware";
+import { OrderControllers } from "../order/order.controller";
 
 const router = Router();
 
@@ -28,6 +29,19 @@ router.get(
   authorizeRoles('admin', 'rider', 'user'),
   RiderControllers.getAllRiders,
 );
+
+
+// rider-এর নিজের deliveries
+router.get(
+  "/rider-deliveries/:riderId",
+  isAuthenticated,
+  // authorizeRoles("rider", "admin"),
+  OrderControllers.getRiderDeliveries,
+);
+
+router.get("/rider-stats/:email", OrderControllers.getRiderStatsAndOrders);
+
+
 
 router.get("/:id", isAuthenticated, RiderControllers.getSingleRider);
 
