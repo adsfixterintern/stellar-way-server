@@ -442,19 +442,8 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
           },
         ],
         prev30Days: [
-          {
-            $match: {
-              createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
-              paymentStatus: "paid",
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              revenue: { $sum: "$totalPrice" },
-              count: { $sum: 1 },
-            },
-          },
+          { $match: { createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }, paymentStatus: "paid" } },
+          { $group: { _id: null, revenue: { $sum: "$totalPrice" }, count: { $sum: 1 } } },
         ],
         monthlyOverview: [
           {
