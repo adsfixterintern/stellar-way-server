@@ -46,23 +46,32 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userEmail = req.params.email as string;
-    
-    const orders = await Order.find({ 
-      "customerInfo.email": userEmail 
-    } as any)
+
+    const orders = await Order.find({
+      "customerInfo.email": userEmail,
+    })
+      // 👤 full customer user object
+      .populate({
+        path: "customerInfo.user",
+      })
+
+      // 🍔 full menu object
+      .populate({
+        path: "items.menuId",
+      })
+
+      // 🚴 full rider + full rider user
       .populate({
         path: "riderId",
-        select: "lastLocation userId phoneNumber status",
-        populate: { 
-          path: "userId", 
-          select: "name image" 
-        }
+        populate: {
+          path: "userId",
+        },
       })
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ 
-      success: true, 
-      data: orders 
+    return res.status(200).json({
+      success: true,
+      data: orders,
     });
   } catch (error: any) {
     res.status(500).json({ 
@@ -82,12 +91,10 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     paymentStatus: "unpaid",
   };
 
-  // যদি ফ্রন্টএন্ড থেকে orderId: null আসে, তবে সেটি ডিলিট করে দিন যাতে মঙ্গুজে এরর না দেয়
   if (!finalOrderData.orderId) delete (finalOrderData as any).orderId;
 
   const result = await Order.create(finalOrderData);
   const amount = Number(orderData.totalPrice).toFixed(2);
-  
   // ২. SSLCommerz ডাটা অবজেক্ট
   const data = {
     total_amount: amount,
@@ -216,9 +223,8 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
       }
     }
 
-    let finalRiderId = orderExists.riderId; 
-    
-   
+    let finalRiderId = orderExists.riderId;
+
     if (riderId) {
       const riderProfile = await Rider.findOne({ userId: riderId });
       if (riderProfile) {
@@ -228,15 +234,16 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
 
     const updatedOrder: any = await Order.findByIdAndUpdate(
       id,
-      { 
-        deliveryStatus: status, 
-        riderId: finalRiderId, 
+      {
+        deliveryStatus: status,
+        riderId: finalRiderId,
       },
-      { new: true }
+      { new: true },
     ).populate("customerInfo.user");
 
     const socketio = req.app.get("socketio");
-    const customerId = updatedOrder.customerInfo?.user?._id || updatedOrder.customerInfo?.user;
+    const customerId =
+      updatedOrder.customerInfo?.user?._id || updatedOrder.customerInfo?.user;
 
     if (socketio) {
       if (customerId) {
@@ -249,8 +256,9 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
           title = "Order Received! 🎉";
           message = "Your delivery is complete. Enjoy!";
         }
-
-        socketio.to(customerId.toString()).emit("new-notification", { title, message, status: "unread" });
+        socketio
+          .to(customerId.toString())
+          .emit("new-notification", { title, message, status: "unread" });
       }
 
       socketio.to(id).emit("location-updates", {
@@ -324,7 +332,23 @@ const updatePaymentStatusByTransactionId = catchAsync(
         .status(404)
         .json({ success: false, message: "Order not found" });
 
-    if (status === 'paid') {
+    if (status === "paid" && result.items && result.items.length > 0) {
+      try {
+        const stockUpdates = result.items.map((item: any) => {
+          return {
+            updateOne: {
+              filter: { _id: item.menuId },
+              update: { $inc: { stock: -item.quantity } }, 
+            },
+          };
+        });
+
+
+        await Menu.bulkWrite(stockUpdates);
+      } catch (stockError) {
+        console.error("Stock update failed:", stockError);
+      }
+
       const notifTitle = "Order Confirmed! 🎉";
       const notifMessage = `Payment successful for Order #${result.transactionId.slice(-6)}. OTP: ${otp}.`;
 
@@ -367,13 +391,11 @@ const updatePaymentStatusByTransactionId = catchAsync(
   },
 );
 
-
 // admin dashboard
 const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-  
   // গত ১ বছরের ডাটার জন্য (জানুয়ারি থেকে ডিসেম্বর চার্টের জন্য)
   const oneYearAgo = new Date(now.getFullYear(), 0, 1); // বর্তমান বছরের ১লা জানুয়ারি থেকে
 
@@ -384,9 +406,21 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
           {
             $group: {
               _id: null,
-              totalPaidOrders: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] } },
-              totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$totalPrice", 0] } },
-              totalPendingOrders: { $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] } },
+              totalPaidOrders: {
+                $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] },
+              },
+              totalRevenue: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$paymentStatus", "paid"] },
+                    "$totalPrice",
+                    0,
+                  ],
+                },
+              },
+              totalPendingOrders: {
+                $sum: { $cond: [{ $eq: ["$paymentStatus", "unpaid"] }, 1, 0] },
+              },
             },
           },
         ],
@@ -411,7 +445,9 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
         ],
         // --- ৩. নতুন অংশ: মান্থলি চার্টের জন্য ডাটা ---
         monthlyOverview: [
-          { $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" } },
+          {
+            $match: { createdAt: { $gte: oneYearAgo }, paymentStatus: "paid" },
+          },
           {
             $group: {
               _id: { month: { $month: "$createdAt" } },
@@ -434,7 +470,20 @@ const getOrderStats = catchAsync(async (req: Request, res: Response) => {
   const prevMonth = stats[0].prev30Days[0] || { revenue: 0, count: 0 };
 
   // মাসের নাম ম্যাপ করার জন্য
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const salesChartData = stats[0].monthlyOverview.map((item: any) => ({
     name: monthNames[item._id.month - 1],
     revenue: item.revenue,
@@ -472,31 +521,35 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
     { new: true }
   );
   if (!result) {
-    return res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`);
+    return res.redirect(
+      `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail`,
+    );
   }
 
-  res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`);
+  res.redirect(
+    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/fail?tranId=${transactionId}`,
+  );
 });
 
 const paymentCancelled = catchAsync(async (req: Request, res: Response) => {
   const { transactionId } = req.params;
   await Order.findOneAndUpdate(
     { transactionId: transactionId as string } as any,
-    { paymentStatus: "cancelled" }
+    { paymentStatus: "cancelled" },
   );
-  res.redirect(`${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`);
+  res.redirect(
+    `${process.env.CLIENT_URL || `${config.clientUrl}`}/payment/cancel`,
+  );
 });
 
-export const getRiderStatsAndOrders = async (
-  req: Request,
-  res: Response,
-) => {
+export const getRiderStatsAndOrders = async (req: Request, res: Response) => {
   try {
     const { email } = req.params;
 
-  
-    if (!email || typeof email !== 'string') {
-      return res.status(400).json({ success: false, message: "Valid email is required" });
+    if (!email || typeof email !== "string") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Valid email is required" });
     }
 
     const user = await User.findOne({ email });
