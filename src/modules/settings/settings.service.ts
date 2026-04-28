@@ -21,7 +21,7 @@ const updateSettingsIntoDB = async (payload: Partial<ISettings>) => {
 
   // Ekhane update korar shomoy nested objects handle korbe
   return await Settings.findByIdAndUpdate(settings._id, payload, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 };

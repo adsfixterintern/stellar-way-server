@@ -25,7 +25,7 @@ const updateBlog = async (id: string, payload: Partial<IBlog>) => {
     id, 
     payload, 
     { 
-      new: true,
+      returnDocument: 'after',
       runValidators: true 
     }
   );

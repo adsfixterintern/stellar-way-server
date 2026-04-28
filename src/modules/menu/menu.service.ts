@@ -94,7 +94,7 @@ const updateMenuInDB = async (id: string, payload: any) => {
     };
 
     const updatedMenu = await Menu.findByIdAndUpdate(id, updateQuery, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
@@ -112,7 +112,7 @@ const updateMenuInDB = async (id: string, payload: any) => {
             },
           },
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
     }
 
@@ -121,7 +121,7 @@ const updateMenuInDB = async (id: string, payload: any) => {
     updateQuery = { $set: payload };
 
     const result = await Menu.findByIdAndUpdate(id, updateQuery, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 

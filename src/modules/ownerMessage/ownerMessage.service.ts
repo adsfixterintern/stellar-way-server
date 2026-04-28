@@ -37,7 +37,7 @@ const updateOwnerMessageIntoDB = async (payload: Partial<IOwnerMessage>) => {
   }
 
   return await OwnerMessage.findByIdAndUpdate(existing._id, payload, {
-    new: true,
+    returnDocument: 'after',
   });
 };
 
@@ -55,7 +55,7 @@ const deleteOwnerMessageFromDB = async () => {
       designation: "",
       image: "",
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
