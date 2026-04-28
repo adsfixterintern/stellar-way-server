@@ -14,6 +14,8 @@ router.post(
   EventControllers.createEvent,
 );
 router.get("/event", EventControllers.getAllEvents);
+
+// get event details
 router.get("/event/:id", EventControllers.getSingleEvent);
 router.put(
   "/event/:id",
