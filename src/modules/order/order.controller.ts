@@ -243,7 +243,7 @@ export const updateDeliveryStatus = async (req: Request, res: Response) => {
         deliveryStatus: status,
         riderId: finalRiderId,
       },
-      { new: true },
+      { returnDocument: 'after' },
     ).populate("customerInfo.user");
 
     const socketio = req.app.get("socketio");
@@ -291,7 +291,7 @@ const updatePaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await Order.findByIdAndUpdate(
     id,
     { paymentStatus: status },
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   );
 
   sendResponse(res, {
@@ -333,7 +333,7 @@ const updatePaymentStatusByTransactionId = catchAsync(
     const result = await Order.findOneAndUpdate(
       { transactionId: transactionId as string } as any,
       updateData,
-      { new: true },
+      { returnDocument: 'after' },
     ).populate("customerInfo.user");
 
     if (!result)
@@ -542,7 +542,7 @@ const paymentFailed = catchAsync(async (req: Request, res: Response) => {
   const result = await Order.findOneAndUpdate(
     { transactionId: transactionId as string } as any,
     { paymentStatus: "failed" },
-    { new: true },
+    { returnDocument: 'after' },
   );
 
   if (!result) {

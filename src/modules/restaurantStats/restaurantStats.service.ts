@@ -39,7 +39,7 @@ const updateStatsFromDB = async (payload: Partial<IRestaurantStats>) => {
   }
 
   return await RestaurantStats.findByIdAndUpdate(stats._id, payload, {
-    new: true,
+    returnDocument: 'after',
   });
 };
 
@@ -61,7 +61,7 @@ const deleteStatsFromDB = async () => {
       awards: 0,
       branches: 0,
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
 
   return reset;

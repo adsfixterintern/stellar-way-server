@@ -92,7 +92,7 @@ const getSingleEventFromDB = async (id: string) => {
 // update events
 const updateEventIntoDB = async (id: string, payload: Partial<IEvent>) => {
   const result = await Event.findByIdAndUpdate(id, payload, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
   return result;

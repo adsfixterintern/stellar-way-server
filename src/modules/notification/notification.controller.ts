@@ -97,7 +97,7 @@ export const markAsRead = async (req: Request, res: Response) => {
     const result = await Notification.findByIdAndUpdate(
       id,
       { status: 'read' },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.status(200).json({ success: true, data: result });
   } catch (error) {

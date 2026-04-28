@@ -20,7 +20,7 @@ const getAllCategoriesFromDB = async (query: Record<string, unknown>) => {
 
 const updateCategoryInDB = async (id: string, payload: Partial<ICategory>) => {
   const result = await Category.findByIdAndUpdate(id, payload, { 
-    new: true,
+    returnDocument: 'after',
     runValidators: true 
   });
   return result;

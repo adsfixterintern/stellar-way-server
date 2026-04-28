@@ -32,7 +32,7 @@ const approveRiderInDB = async (riderId: string) => {
   const updatedRider = await Rider.findByIdAndUpdate(
     riderId,
     { status: "active" },
-    { new: true },
+    { returnDocument: 'after' },
   ).populate("userId");
 
   await User.findByIdAndUpdate(application.userId, { role: "rider" });
@@ -66,7 +66,7 @@ const getSingleRiderFromDB = async (id: string) => {
 const updateRiderInDB = async (id: string, payload: Partial<IRider>) => {
   const { status, userId, ...updateData } = payload;
   return await Rider.findByIdAndUpdate(id, updateData, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 };
@@ -107,7 +107,7 @@ const rejectRiderFromDB = async (id: string) => {
   const result = await Rider.findByIdAndUpdate(
     id,
     { status: 'rejected' },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
 
   return result;

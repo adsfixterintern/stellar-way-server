@@ -24,7 +24,7 @@ const getAllFeedbacksFromDB = async (query: Record<string, unknown>) => {
 };
 const updateFeedbackStatusIntoDB = async (id: string, payload: Partial<ITestimonial>) => {
   const result = await Testimonial.findByIdAndUpdate(id, payload, { 
-    new: true, 
+    returnDocument: 'after', 
     runValidators: true 
   });
   return result;
