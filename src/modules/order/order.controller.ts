@@ -736,6 +736,41 @@ export const getFilteredOrderStats = catchAsync(
   },
 );
 
+
+
+
+// ─── নতুন: Rider-এর accepted deliveries ───────────────────────────────────────
+export const getRiderDeliveries = async (req: Request, res: Response) => {
+  try {
+    const { riderId } = req.params;
+
+    if (!riderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Rider ID is required",
+      });
+    }
+
+    const deliveries = await Order.find({
+      riderId: new (require("mongoose").Types.ObjectId)(riderId),
+      deliveryStatus: { $in: ["on-the-way", "delivered"] },
+    })
+      .populate("items.menuId")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Rider deliveries fetched successfully",
+      data: deliveries,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const OrderControllers = {
   createOrder,
   createStripeOrder,
@@ -749,4 +784,5 @@ export const OrderControllers = {
   paymentFailed,
   paymentCancelled,
   getRiderStatsAndOrders,
+  getRiderDeliveries
 };
