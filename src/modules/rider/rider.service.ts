@@ -63,13 +63,38 @@ const getSingleRiderFromDB = async (id: string) => {
   return result;
 };
 
+// const updateRiderInDB = async (id: string, payload: Partial<IRider>) => {
+//   const { status, userId, ...updateData } = payload;
+//   return await Rider.findByIdAndUpdate(id, updateData, {
+//     new: true,
+//     runValidators: true,
+//   });
+// };
+
 const updateRiderInDB = async (id: string, payload: Partial<IRider>) => {
-  const { status, userId, ...updateData } = payload;
-  return await Rider.findByIdAndUpdate(id, updateData, {
-    returnDocument: 'after',
+  // শুধুমাত্র userId বাদ দিন যাতে সিকিউরিটি ঠিক থাকে
+  const { userId, ...updateData } = payload;
+
+  // TypeScript এরর ফিক্স করতে QueryOptions টাইপ কাস্টিং
+  const options: QueryOptions = {
+    new: true,
     runValidators: true,
-  });
+  };
+
+  const result = await Rider.findByIdAndUpdate(
+    id,
+    updateData, // এখন এতে status বা isBusy থাকলে তাও আপডেট হবে
+    options
+  );
+
+  if (!result) {
+    throw new Error("Rider profile not found!");
+  }
+
+  return result;
 };
+
+
 
 const deleteRiderFromDB = async (id: string) => {
   const session = await mongoose.startSession();
