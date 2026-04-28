@@ -89,7 +89,7 @@
 
 // const updateBookingInDB = async (id: string, payload: Partial<IBooking>) => {
 //   const result = await Booking.findByIdAndUpdate(id, payload, {
-//     new: true,
+//     returnDocument: 'after',
 //     runValidators: true,
 //   });
 //   return result;
@@ -193,7 +193,7 @@ const getSingleBookingFromDB = async (id: string) => {
 
 const updateBookingInDB = async (id: string, payload: Partial<IBooking>) => {
   return await Booking.findByIdAndUpdate(id, payload, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 };

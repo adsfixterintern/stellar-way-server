@@ -43,7 +43,7 @@ const getSingleFaqFromDB = async (id: string) => {
 
 const updateFaqIntoDB = async (id: string, payload: Partial<IFaq>) => {
   const result = await Faq.findByIdAndUpdate(id, payload, {
-    new: true, 
+    returnDocument: 'after', 
     runValidators: true, 
   });
   return result;

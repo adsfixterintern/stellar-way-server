@@ -25,7 +25,7 @@ const getActiveOffersFromDB = async () => {
 // --- UPDATE OFFER LOGIC ---
 const updateOfferIntoDB = async (id: string, payload: Partial<IOffer>) => {
   return await Offer.findByIdAndUpdate(id, payload, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 };

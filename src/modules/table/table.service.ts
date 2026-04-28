@@ -17,7 +17,7 @@ const getSingleTable = async (id: string): Promise<ITable | null> => {
 };
 
 const updateTable = async (id: string, payload: Partial<ITable>): Promise<ITable | null> => {
-  const result = await Table.findByIdAndUpdate(id, payload, { new: true });
+  const result = await Table.findByIdAndUpdate(id, payload, { returnDocument: 'after' });
   return result;
 };
 
