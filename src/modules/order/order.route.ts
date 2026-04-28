@@ -3,6 +3,7 @@ import {
   getRiderStatsAndOrders,
   OrderControllers,
   updateDeliveryStatus,
+  getFilteredOrderStats, // ✅ already imported
 } from "./order.controller";
 import { isAuthenticated } from "../../app/middlewares/auth.middleware";
 import { authorizeRoles } from "../../app/middlewares/authorization.middleware";
@@ -12,7 +13,7 @@ const router = express.Router();
 router.post(
   "/create-order",
   isAuthenticated,
-  authorizeRoles('admin','chef','rider','user'),
+  authorizeRoles("admin", "chef", "rider", "user"),
   OrderControllers.createOrder,
 );
 router.get(
@@ -21,13 +22,25 @@ router.get(
   authorizeRoles("admin"),
   OrderControllers.getAllOrders,
 );
+
+// ✅ NEW: filtered stats route — /stats/filtered?period=day|week|month&month=0-11
+// এটা "/:email" এর আগে রাখতে হবে, নইলে "filtered" কে email হিসেবে ধরবে
 router.get(
-  "/:email",
+  "/stats/filtered",
   isAuthenticated,
-  authorizeRoles("user", "rider"),
-  OrderControllers.getMyOrders,
+  authorizeRoles("admin"),
+  getFilteredOrderStats,
 );
+
+router.get(
+  "/stats/overview",
+  isAuthenticated,
+  authorizeRoles("admin", "rider", "user"),
+  OrderControllers.getOrderStats,
+);
+
 router.get("/details/:id", isAuthenticated, OrderControllers.getOrderDetails);
+
 router.patch(
   "/status/:id",
   isAuthenticated,
@@ -49,12 +62,6 @@ router.patch(
   "/status-by-transaction/:transactionId",
   OrderControllers.updatePaymentStatusByTransactionId,
 );
-router.get(
-  "/stats/overview",
-  isAuthenticated,
-  authorizeRoles("admin", "rider", "user"),
-  OrderControllers.getOrderStats,
-);
 router.post(
   "/payment/fail/:transactionId",
   isAuthenticated,
@@ -68,5 +75,13 @@ router.post(
   OrderControllers.paymentCancelled,
 );
 router.get("/rider-stats/:email", isAuthenticated, getRiderStatsAndOrders);
+
+// ✅ /:email সবার শেষে রাখো কারণ এটা wildcard
+router.get(
+  "/:email",
+  isAuthenticated,
+  authorizeRoles("user", "rider"),
+  OrderControllers.getMyOrders,
+);
 
 export const OrderRoutes = router;
