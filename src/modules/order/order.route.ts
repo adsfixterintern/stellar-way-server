@@ -76,7 +76,7 @@ router.post(
 );
 router.get("/rider-stats/:email", isAuthenticated, getRiderStatsAndOrders);
 
-// ✅ /:email সবার শেষে রাখো কারণ এটা wildcard
+
 router.get(
   "/:email",
   isAuthenticated,
