@@ -2,6 +2,7 @@ import { Response } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/index";
 import sendResponse from "./sendResponse";
+import { Rider } from "../../modules/rider/rider.model";
 
 const parseExpiryToMs = (value: string) => {
   const trimmed = String(value).trim();
@@ -32,13 +33,15 @@ const createAccessToken = (user: any) =>
   );
 
 const createRefreshToken = (user: any) =>
-  jwt.sign(
-    { id: user._id },
-    config.jwt_refresh_secret as string,
-    { expiresIn: config.jwt_refresh_expires_in as string },
-  );
+  jwt.sign({ id: user._id }, config.jwt_refresh_secret as string, {
+    expiresIn: config.jwt_refresh_expires_in as string,
+  });
 
-export const sendToken = (user: any, statusCode: number, res: Response) => {
+export const sendToken = async (
+  user: any,
+  statusCode: number,
+  res: Response,
+) => {
   const accessToken = createAccessToken(user);
   const refreshToken = createRefreshToken(user);
 
@@ -63,6 +66,11 @@ export const sendToken = (user: any, statusCode: number, res: Response) => {
   };
 
   const userObj = user.toObject ? user.toObject() : { ...user };
+  let riderId = null;
+  if (userObj.role === "rider") {
+    const riderProfile = await Rider.findOne({ userId: user._id }).lean();
+    riderId = riderProfile ? riderProfile._id : null;
+  }
 
   const {
     password,
@@ -74,6 +82,11 @@ export const sendToken = (user: any, statusCode: number, res: Response) => {
     ...cleanUser
   } = userObj;
 
+  const finalUser = {
+    ...cleanUser,
+    riderId: riderId,
+  };
+
   res.cookie("token", accessToken, accessCookieOptions);
   res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
@@ -83,7 +96,7 @@ export const sendToken = (user: any, statusCode: number, res: Response) => {
     message:
       statusCode === 201 ? "Registered Successfully" : "Logged in Successfully",
     data: {
-      user: cleanUser,
+      user: finalUser,
       token: accessToken,
       refreshToken,
     },

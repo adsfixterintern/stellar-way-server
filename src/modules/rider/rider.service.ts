@@ -2,6 +2,7 @@ import { IRider } from "./rider.interface";
 import { User } from "../user/user.model";
 import mongoose from "mongoose";
 import { Rider } from "./rider.model";
+import { Order } from "../order/order.model";
 
 const applyForRiderIntoDB = async (payload: IRider) => {
   const isUserExists = await User.findById(payload.userId);
@@ -181,6 +182,15 @@ const getRiderByUserIdFromDB = async (userId: string) => {
   return result;
 };
 
+const getRiderDeliveriesFromDB = async (riderId: string) => {
+  const result = await Order.find({
+    riderId: riderId,
+    deliveryStatus: { $in: ["on-the-way", "delivered"] },
+  }).sort({ createdAt: -1 });
+
+  return result;
+};
+
 export const RiderServices = {
   applyForRiderIntoDB,
   approveRiderInDB,
@@ -191,4 +201,5 @@ export const RiderServices = {
   rejectRiderFromDB,
   updateRiderRatingInDB,
   getRiderByUserIdFromDB,
+  getRiderDeliveriesFromDB
 };
