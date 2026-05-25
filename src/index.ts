@@ -15,7 +15,7 @@ app.use(
   cors({
     origin: [
       "https://stellar-way.onrender.com", 
-      "http://localhost:3001", 
+      "https://resturant-admin-delta.vercel.app", 
       "https://stellar-way-coral.vercel.app",
       "https://yourdomain.com",
       "https://admin.yourdomain.com",
