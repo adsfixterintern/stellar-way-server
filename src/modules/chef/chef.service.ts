@@ -1,6 +1,6 @@
 import { IChef } from "./chef.interface";
 import { Chef } from "./chef.model";
-import { FilterQuery } from "mongoose";
+
 
 const createChefIntoDB = async (payload: IChef) => {
   return await Chef.create(payload);
@@ -13,7 +13,7 @@ const getAllChefsFromDB = async (query: Record<string, unknown>) => {
 
   const searchTerm = typeof query.searchTerm === 'string' ? query.searchTerm : "";
 
-  const searchFilter: FilterQuery<typeof Chef> = searchTerm
+  const searchFilter = searchTerm
     ? { name: { $regex: searchTerm, $options: "i" } }
     : {};
 

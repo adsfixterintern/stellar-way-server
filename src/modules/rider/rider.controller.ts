@@ -150,6 +150,21 @@ const getMyRiderProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getRiderDeliveries = catchAsync(async (req: Request, res: Response) => {
+  const { riderId } = req.params;
+
+  const result = await RiderServices.getRiderDeliveriesFromDB(riderId as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Rider deliveries retrieved successfully",
+    data: result,
+  });
+});
+
+
 export const RiderControllers = {
   applyRider,
   approveRider,
@@ -160,4 +175,5 @@ export const RiderControllers = {
   rejectRider,
   updateRiderRating,
   getMyRiderProfile,
+  getRiderDeliveries
 };

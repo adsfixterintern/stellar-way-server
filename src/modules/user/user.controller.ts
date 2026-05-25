@@ -189,9 +189,8 @@ const getAdminData = catchAsync(async (req: Request, res: Response) => {
 //get users
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
- 
+  
   const userId = req.query.userId;
-  console.log(userId);
 
   const result = await UserService.getMeFromDB(userId as any);
 
@@ -203,8 +202,6 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-
 // user.controller.ts
 
 // const updateProfile = catchAsync(async (req: Request, res: Response) => {
@@ -213,7 +210,7 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 //   if (req.file) {
 //     const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
 //     if (uploadResult) {
-//       req.body.image = uploadResult.url; 
+//       req.body.image = uploadResult.url;
 //     }
 //   }
 
@@ -234,7 +231,6 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 //   });
 // });
 
-
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId, ...updateData } = req.body;
 
@@ -248,9 +244,11 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   // যদি ফাইল (Multer) এর মাধ্যমে আসে তবে সেটা প্রসেস হবে
   // আর যদি সরাসরি body.image-এ Base64 আসে তবে সেটা updateData-তেই থাকবে
   if (req.file) {
-    const uploadResult = await UploadService.processSingleFile(req.file as Express.Multer.File);
+    const uploadResult = await UploadService.processSingleFile(
+      req.file as Express.Multer.File,
+    );
     if (uploadResult) {
-      updateData.image = uploadResult.url; 
+      updateData.image = uploadResult.url;
     }
   }
 
@@ -269,10 +267,8 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const query = req.query; 
+  const query = req.query;
   const result = await UserService.getAllUsersFromDB(query);
 
   sendResponse(res, {
@@ -283,8 +279,6 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     data: result.data,
   });
 });
-
-
 
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -304,7 +298,7 @@ const updateUserRole = catchAsync(async (req: Request, res: Response) => {
   const user = await User.findByIdAndUpdate(
     id,
     { role },
-    { returnDocument: 'after' }
+    { returnDocument: "after" },
   );
 
   sendResponse(res, {
@@ -317,14 +311,14 @@ const updateUserRole = catchAsync(async (req: Request, res: Response) => {
 
 const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body; 
+  const { status } = req.body;
 
   const result = await UserService.updateUserStatusInDB(id as string, status);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: `User ${status === 'blocked' ? 'blocked' : 'unblocked'} successfully`,
+    message: `User ${status === "blocked" ? "blocked" : "unblocked"} successfully`,
     data: result,
   });
 });
@@ -340,8 +334,8 @@ export const UserController = {
   changePassword,
   updateProfile,
   getMe,
-  getAllUsers ,
+  getAllUsers,
   deleteUser,
   updateUserRole,
-  updateUserStatus
+  updateUserStatus,
 };

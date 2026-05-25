@@ -1,16 +1,21 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
+import config from "../config";
 
-export const sendEmail = async (to: string, html: string, subject: string = "Notification from Savory Nest") => {
+export const sendEmail = async (
+  to: string,
+  html: string,
+  subject: string = "Notification from Savory Nest",
+) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: config.email_user,
+      pass: config.email_pass,
     },
   });
 
   await transporter.sendMail({
-    from: `"Savory Nest" <${process.env.EMAIL_USER}>`,
+    from: `"Savory Nest" <${process.env.email_user}>`,
     to,
     subject: subject,
     html,

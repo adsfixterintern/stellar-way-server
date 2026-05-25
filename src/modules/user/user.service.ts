@@ -40,7 +40,9 @@ const loginUserFromDB = async (payload: Pick<IUser, "email" | "password">) => {
   }
 
   if (user.status === "blocked") {
-    throw new Error("Your account has been blocked by the admin. Please contact support.");
+    throw new Error(
+      "Your account has been blocked by the admin. Please contact support.",
+    );
   }
 
   // password check kora
@@ -75,7 +77,7 @@ const forgetPasswordIntoDB = async (email: string) => {
   user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
 
   await user.save({ validateBeforeSave: false });
-  console.log(resetToken)
+  console.log(resetToken);
 
   const resetLink = `${config.clientUrl}/reset-password/${resetToken}`;
 
@@ -134,18 +136,23 @@ const resetPasswordIntoDB = async (token: string, password: any) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
+
   await User.findByIdAndUpdate(
     user._id,
     {
       password: hashedPassword,
-      resetPasswordToken: undefined,
-      resetPasswordExpires: undefined,
+      resetPasswordToken: null, 
+      resetPasswordExpires: null,
     },
-    { runValidators: false },
+    {
+      runValidators: false,
+      new: true, 
+    },
   );
 
   return null;
 };
+
 
 const changePasswordIntoDB = async (userId: string, payload: any) => {
   const user = await User.findById(userId).select("+password");
@@ -168,7 +175,6 @@ const changePasswordIntoDB = async (userId: string, payload: any) => {
   return null;
 };
 
-
 //get users
 
 const getMeFromDB = async (userId: string) => {
@@ -179,10 +185,7 @@ const getMeFromDB = async (userId: string) => {
   return result;
 };
 
-
-
 const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
-
   if (!payload) {
     throw new Error("Payload is missing!");
   }
@@ -192,17 +195,15 @@ const updateProfileInDB = async (userId: string, payload: Partial<IUser>) => {
     throw new Error("User not found!");
   }
 
-
   const { email, password, role, ...updateData } = payload;
 
   const result = await User.findByIdAndUpdate(userId, updateData, {
-    returnDocument: 'after',
+    returnDocument: "after",
     runValidators: true,
   });
 
   return result;
 };
-
 
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const { searchTerm, role, page, limit } = query;
@@ -242,22 +243,21 @@ const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
-
 const deleteUserFromDB = async (userId: string) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new Error("User not found!");
   }
 
- 
   const result = await User.findByIdAndDelete(userId);
 
-  
   return result;
 };
 
-
-const updateUserStatusInDB = async (userId: string, status: 'active' | 'blocked') => {
+const updateUserStatusInDB = async (
+  userId: string,
+  status: "active" | "blocked",
+) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new Error("User not found!");
@@ -266,7 +266,7 @@ const updateUserStatusInDB = async (userId: string, status: 'active' | 'blocked'
   const result = await User.findByIdAndUpdate(
     userId,
     { status },
-    { returnDocument: 'after', runValidators: true }
+    { returnDocument: "after", runValidators: true },
   );
 
   return result;
@@ -282,5 +282,5 @@ export const UserService = {
   getMeFromDB,
   getAllUsersFromDB,
   deleteUserFromDB,
-  updateUserStatusInDB
+  updateUserStatusInDB,
 };
