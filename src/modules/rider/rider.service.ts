@@ -1,6 +1,6 @@
 import { IRider } from "./rider.interface";
 import { User } from "../user/user.model";
-import mongoose from "mongoose";
+import mongoose, { QueryOptions } from "mongoose";
 import { Rider } from "./rider.model";
 import { Order } from "../order/order.model";
 

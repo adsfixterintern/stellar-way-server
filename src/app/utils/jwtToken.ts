@@ -29,13 +29,13 @@ const createAccessToken = (user: any) =>
   jwt.sign(
     { id: user._id, role: user.role },
     config.jwt_access_secret as string,
-    { expiresIn: config.jwt_access_expires_in as string },
+    { expiresIn: config.jwt_access_expires_in } as jwt.SignOptions,
   );
 
 const createRefreshToken = (user: any) =>
   jwt.sign({ id: user._id }, config.jwt_refresh_secret as string, {
-    expiresIn: config.jwt_refresh_expires_in as string,
-  });
+    expiresIn: config.jwt_refresh_expires_in,
+  } as jwt.SignOptions);
 
 export const sendToken = async (
   user: any,
