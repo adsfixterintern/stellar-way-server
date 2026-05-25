@@ -16,7 +16,7 @@ app.use(
     origin: [
       "https://stellar-way.onrender.com", 
       "http://localhost:3001", 
-      "http://127.0.0.1:3000",
+      "https://stellar-way-coral.vercel.app",
       "https://yourdomain.com",
       "https://admin.yourdomain.com",
     ],
