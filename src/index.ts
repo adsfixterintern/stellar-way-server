@@ -17,7 +17,7 @@ app.use(
       "https://stellar-way.onrender.com",
       "https://resturant-admin-delta.vercel.app",
       "https://stellar-way-coral.vercel.app",
-      "https://yourdomain.com",
+      "https://stellar-way-admin.vercel.app",
       "https://stellar-way.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
