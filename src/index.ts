@@ -19,6 +19,7 @@ app.use(
       "https://stellar-way-coral.vercel.app",
       "https://stellar-way-admin.vercel.app",
       "https://stellar-way.vercel.app",
+      "http://localhost:3000"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
