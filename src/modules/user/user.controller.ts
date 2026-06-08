@@ -8,7 +8,6 @@ import { User } from "./user.model";
 import { UploadService } from "../upload/upload.service";
 import config from "../../app/config";
 
-
 // Register
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.registerUserIntoDB(req.body);
@@ -161,7 +160,6 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 const getAdminData = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
 
@@ -185,11 +183,9 @@ const getAdminData = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 //get users
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
-  
   const userId = req.query.userId;
 
   const result = await UserService.getMeFromDB(userId as any);
@@ -231,33 +227,22 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 //   });
 // });
 
-const updateProfile = catchAsync(async (req: Request, res: Response) => {
-  const { userId, ...updateData } = req.body;
+export const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any).id; 
+  const updateData = { ...req.body };
 
-  // যদি ফ্রন্টএন্ড থেকে userId না আসে, তবে টোকেন থেকে নিন (Security-র জন্য ভালো)
-  const targetId = userId || (req as any).user?._id;
-
-  if (!targetId) {
-    throw new Error("User ID is required to update profile.");
-  }
-
-  // যদি ফাইল (Multer) এর মাধ্যমে আসে তবে সেটা প্রসেস হবে
-  // আর যদি সরাসরি body.image-এ Base64 আসে তবে সেটা updateData-তেই থাকবে
+  // Check if a new file is uploaded
   if (req.file) {
-    const uploadResult = await UploadService.processSingleFile(
-      req.file as Express.Multer.File,
-    );
+    const uploadResult = await UploadService.processSingleFile(req.file);
     if (uploadResult) {
-      updateData.image = uploadResult.url;
+      updateData.image = uploadResult.url; 
     }
   }
 
-  // যদি কোন ডাটাই না থাকে
-  if (Object.keys(updateData).length === 0) {
-    throw new Error("Please provide data to update your profile.");
-  }
-
-  const result = await UserService.updateProfileInDB(targetId, updateData);
+  const result = await User.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
   sendResponse(res, {
     statusCode: 200,

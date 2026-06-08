@@ -14,11 +14,12 @@ const PORT = config.port;
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", 
-      "http://localhost:3001", 
-      "http://127.0.0.1:3000",
-      "https://yourdomain.com",
-      "https://admin.yourdomain.com",
+      "https://stellar-way.onrender.com",
+      "https://resturant-admin-delta.vercel.app",
+      "https://stellar-way-coral.vercel.app",
+      "https://stellar-way-admin.vercel.app",
+      "https://stellar-way.vercel.app",
+      "http://localhost:3000"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,

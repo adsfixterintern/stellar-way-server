@@ -19,11 +19,11 @@ router.get(
 );
 
 router.patch(
-  '/update-profile',
+  "/update-profile",
   isAuthenticated,
-  authorizeRoles('user', 'admin', 'rider'),
-  upload.single('image'), 
-  UserController.updateProfile
+  authorizeRoles("user", "admin", "rider"),
+  upload.single("image"), 
+  UserController.updateProfile,
 );
 
 router.post("/forget-password", UserController.forgetPassword);
@@ -55,20 +55,15 @@ router.delete(
   authorizeRoles("admin"),
   UserController.deleteUser,
 );
-router.patch(
-  "/users/update-role/:id",
-  UserController.updateUserRole
-);
+router.patch("/users/update-role/:id", UserController.updateUserRole);
 
-
-router.get('/me', UserController.getMe);
-
+router.get("/me", UserController.getMe);
 
 router.patch(
-  "/users/update-status/:id", 
+  "/users/update-status/:id",
   isAuthenticated,
   authorizeRoles("admin"),
-  UserController.updateUserStatus
+  UserController.updateUserStatus,
 );
 
 export const UserRoutes = router;
